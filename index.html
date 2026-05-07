@@ -144,7 +144,10 @@ a { text-decoration: none; color: inherit; }
 .sheet-overlay.open { opacity: 1; pointer-events: all; }
 .sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%); width: min(430px, 100vw); background: var(--white); border-radius: var(--radius) var(--radius) 0 0; z-index: 510; padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0)); transition: transform .4s cubic-bezier(.34,1.2,.64,1); max-height: 92dvh; overflow-y: auto; }
 .sheet.open { transform: translateX(-50%) translateY(0); }
-.sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.sheet-header { position: relative; display: flex; align-items: center; justify-content: center; height: 28px; margin-bottom: 20px; }
+.sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; }
+.sheet-close { position: absolute; right: -4px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--cream); border: none; border-radius: 50%; font-size: 17px; line-height: 1; color: var(--text-muted); cursor: pointer; transition: all .15s; }
+.sheet-close:active { background: var(--border); color: var(--text); }
 .sheet-title { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; margin-bottom: 20px; }
 
 /* ===== FORMS ===== */
@@ -162,6 +165,18 @@ textarea.form-control { resize: none; min-height: 80px; }
 .btn-primary { width: 100%; padding: 15px; border-radius: var(--radius-sm); background: var(--primary); color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all .2s ease; box-shadow: 0 4px 16px rgba(232,150,138,0.35); border: none; }
 .btn-primary:active { transform: scale(.98); }
 .btn-secondary { width: 100%; padding: 13px; border-radius: var(--radius-sm); background: var(--cream); color: var(--text); font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s ease; border: 2px solid var(--border); margin-top: 10px; }
+
+/* ===== FEED TIMER ===== */
+.feed-timer { display: flex; align-items: center; gap: 16px; background: var(--cream); border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; }
+.feed-timer-display { font-size: 30px; font-weight: 700; letter-spacing: 2px; color: var(--text); min-width: 72px; font-variant-numeric: tabular-nums; }
+.feed-timer.running { border-color: var(--primary); background: var(--primary-soft); }
+.feed-timer.running .feed-timer-display { color: var(--primary); }
+.feed-timer-btns { display: flex; gap: 8px; }
+.timer-btn { padding: 8px 18px; border-radius: 30px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; border: 2px solid; }
+.timer-start { border-color: var(--primary); color: var(--primary); background: transparent; }
+.timer-start:active { background: var(--primary-soft); }
+.timer-stop { border-color: #ef4444; color: #ef4444; background: transparent; }
+.timer-stop:active { background: #fef2f2; }
 
 /* ===== SUCCESS TOAST ===== */
 .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--text); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 1000; transition: transform .4s cubic-bezier(.34,1.56,.64,1); white-space: nowrap; box-shadow: var(--shadow); display: flex; align-items: center; gap: 8px; }
@@ -422,6 +437,12 @@ textarea.form-control { resize: none; min-height: 80px; }
 .login-err { font-size:13px;color:#C0392B;min-height:18px;margin-top:12px;font-weight:600; }
 .login-switch { text-align:center;margin-top:18px;font-size:13px;color:var(--text-muted); }
 .login-switch span { color:var(--primary);font-weight:700;cursor:pointer;text-decoration:underline; }
+.login-welcome { width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px; }
+.login-welcome .btn-primary { margin:0;font-size:17px;padding:17px; }
+.login-welcome .btn-secondary { margin:0; }
+.login-back { text-align:center;margin-top:16px;font-size:13px; }
+.login-back span { color:var(--text-muted);cursor:pointer;transition:color .15s; }
+.login-back span:hover { color:var(--primary); }
 </style>
 </head>
 <body>
@@ -651,7 +672,10 @@ textarea.form-control { resize: none; min-height: 80px; }
 <!-- SHEET OVERLAY -->
 <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
 <div class="sheet" id="mainSheet">
-  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeSheet()" aria-label="Fechar">✕</button>
+  </div>
   <div id="sheetContent"></div>
 </div>
 
@@ -661,14 +685,18 @@ textarea.form-control { resize: none; min-height: 80px; }
   <div class="login-app-name">bebélog</div>
   <div class="login-tagline">O diário do seu bebé, sempre consigo</div>
 
+  <!-- WELCOME (shown first to new users) -->
+  <div id="login-welcome" class="login-welcome">
+    <button class="btn-primary" onclick="toggleLoginMode(true)">🌱 Criar conta nova</button>
+    <button class="btn-secondary" onclick="toggleLoginMode(false)">Já tenho conta</button>
+  </div>
+
   <!-- LOGIN FORM -->
-  <div class="login-card" id="login-form">
+  <div class="login-card" id="login-form" style="display:none">
     <div class="login-title">Bem-vinda de volta 👋</div>
     <div class="form-group">
       <label class="form-label">Número de telefone</label>
-      <input type="tel" class="form-control" id="login-phone" placeholder="841234567" autocomplete="tel"
-             style="letter-spacing:.5px">
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Número moçambicano — o código 258 é adicionado automaticamente</div>
+      <input type="tel" class="form-control" id="login-phone" placeholder="841234567" autocomplete="tel" style="letter-spacing:.5px">
     </div>
     <div class="form-group">
       <label class="form-label">Senha</label>
@@ -678,6 +706,7 @@ textarea.form-control { resize: none; min-height: 80px; }
     <div class="login-err" id="login-err"></div>
     <button class="btn-primary" id="login-btn" onclick="submitLogin()" style="margin-top:4px;width:100%">Entrar</button>
     <div class="login-switch">Ainda não tem conta? <span onclick="toggleLoginMode(true)">Registar</span></div>
+    <div class="login-back"><span onclick="toggleLoginMode(null)">← Voltar</span></div>
   </div>
 
   <!-- REGISTER FORM -->
@@ -685,9 +714,7 @@ textarea.form-control { resize: none; min-height: 80px; }
     <div class="login-title">Criar conta 🌱</div>
     <div class="form-group">
       <label class="form-label">Número de telefone</label>
-      <input type="tel" class="form-control" id="reg-phone" placeholder="841234567" autocomplete="tel"
-             style="letter-spacing:.5px">
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Número moçambicano — o código 258 é adicionado automaticamente</div>
+      <input type="tel" class="form-control" id="reg-phone" placeholder="841234567" autocomplete="tel" style="letter-spacing:.5px">
     </div>
     <div class="form-group">
       <label class="form-label">Senha</label>
@@ -697,6 +724,7 @@ textarea.form-control { resize: none; min-height: 80px; }
     <div class="login-err" id="reg-err"></div>
     <button class="btn-primary" id="reg-btn" onclick="submitRegister()" style="margin-top:4px;width:100%">Criar conta</button>
     <div class="login-switch">Já tem conta? <span onclick="toggleLoginMode(false)">Entrar</span></div>
+    <div class="login-back"><span onclick="toggleLoginMode(null)">← Voltar</span></div>
   </div>
 </div>
 
@@ -738,7 +766,7 @@ const API = {
     const opts = { method, headers: this._h() };
     if (data !== undefined) opts.body = JSON.stringify(data);
     const r = await fetch((window.CONFIG?.apiUrl || '/api') + path, opts);
-    if (r.status === 401) { showLoginScreen(); return null; }
+    if (r.status === 401) { showLoginScreen(false); return null; }
     return r;
   },
   async get(path)           { return (await this._fetch('GET',    path))?.json(); },
@@ -899,9 +927,36 @@ function openSheet(type) {
 }
 function closeSheet() {
   document.getElementById('sheetOverlay').classList.remove('open');
-  document.getElementById('mainSheet').classList.remove('open');
+  const sheet = document.getElementById('mainSheet');
+  sheet.classList.remove('open');
+  sheet.style.transform = '';
   S.sheetOpen = null;
+  resetFeedTimer();
 }
+// ── Sheet drag-to-close ───────────────────────────────────────────────────────
+(function() {
+  const sheet = document.getElementById('mainSheet');
+  let startY = 0, dragging = false;
+  sheet.querySelector('.sheet-header').addEventListener('touchstart', e => {
+    if (!sheet.classList.contains('open')) return;
+    startY   = e.touches[0].clientY;
+    dragging = true;
+    sheet.style.transition = 'none';
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const delta = Math.max(0, e.touches[0].clientY - startY);
+    sheet.style.transform = `translateX(-50%) translateY(${delta}px)`;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!dragging) return;
+    dragging = false;
+    const delta = e.changedTouches[0].clientY - startY;
+    sheet.style.transition = '';
+    sheet.style.transform  = '';
+    if (delta > 80) closeSheet();
+  });
+})();
 function buildSheetContent(type) {
   switch(type) {
     case 'sleep': return buildSleepSheet();
@@ -1153,7 +1208,7 @@ function logItemHtml(l, showDelete = false) {
   const titles = { sleep: 'Sono', feed: 'Alimentação', diaper: 'Fralda', med: 'Medicamento', growth: 'Crescimento' };
   let sub = '';
   if (l.type === 'sleep') sub = l.duration ? fmtDuration(l.duration) : (l.end ? '' : 'A dormir...');
-  if (l.type === 'feed') sub = l.feedType === 'breast' ? `Mama ${l.side||''}` : l.feedType === 'formula' ? `Biberão ${l.amount||''}ml` : 'Papinha';
+  if (l.type === 'feed') sub = l.feedType === 'breast' ? `Mama${l.duration ? ` · ${l.duration}min` : ''}` : l.feedType === 'formula' ? `Biberão ${l.amount||''}ml` : 'Papinha';
   if (l.type === 'diaper') sub = l.diaperType === 'wet' ? 'Molhada' : l.diaperType === 'dirty' ? 'Suja' : 'Molhada e Suja';
   if (l.type === 'med') sub = `${l.medName||''} ${l.dose||''}`;
   if (l.type === 'growth') sub = l.growthType === 'weight' ? `Peso: ${l.value}kg` : `Altura: ${l.value}cm`;
@@ -1344,16 +1399,15 @@ function buildEditLogSheet() {
     </div>
     <div id="e-breast-group" style="display:${l.feedType==='breast'?'block':'none'}">
       <div class="form-group">
-        <label class="form-label">Lado</label>
-        <div class="toggle-group" id="e-side">
-          <button class="toggle-btn ${l.side==='esquerdo'?'active':''}" data-v="esquerdo" onclick="toggleSelect(this,'e-side')">◉ Esquerdo</button>
-          <button class="toggle-btn ${l.side==='direito'?'active':''}" data-v="direito" onclick="toggleSelect(this,'e-side')">◉ Direito</button>
-          <button class="toggle-btn ${l.side==='ambos'?'active':''}" data-v="ambos" onclick="toggleSelect(this,'e-side')">◉ Ambos</button>
+        <label class="form-label">Duração</label>
+        <div class="feed-timer" id="f-timer">
+          <span class="feed-timer-display" id="ft-display">00:00</span>
+          <div class="feed-timer-btns">
+            <button class="timer-btn timer-start" id="ft-start" onclick="startFeedTimer()">▶ Iniciar</button>
+            <button class="timer-btn timer-stop" id="ft-stop" onclick="stopFeedTimer()" style="display:none">⏹ Parar</button>
+          </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Duração (minutos)</label>
-        <input type="number" class="form-control" id="e-fduration" value="${l.duration||''}" min="1" max="60">
+        <input type="number" class="form-control" id="e-fduration" value="${l.duration||''}" placeholder="ex: 15 min" min="1" max="180" step="1" inputmode="numeric">
       </div>
     </div>
     <div id="e-formula-group" style="display:${l.feedType==='formula'?'block':'none'}">
@@ -1442,7 +1496,6 @@ function saveEditLog() {
     if (!timeVal) { alert('Insira a hora'); return; }
     changes.time = new Date(`${dateBase}T${timeVal}`).getTime();
     changes.feedType = document.querySelector('#e-ftype .toggle-btn.active')?.dataset.v || l.feedType;
-    changes.side = document.querySelector('#e-side .toggle-btn.active')?.dataset.v;
     const dur = document.getElementById('e-fduration')?.value;
     changes.duration = dur ? +dur : null;
     const amt = document.getElementById('e-amount')?.value;
@@ -1558,16 +1611,15 @@ function buildFeedSheet() {
   </div>
   <div id="feed-extra">
     <div class="form-group" id="f-breast-group">
-      <label class="form-label">Lado</label>
-      <div class="toggle-group" id="f-side">
-        <button class="toggle-btn active" data-v="esquerdo" onclick="toggleSelect(this,'f-side')">◉ Esquerdo</button>
-        <button class="toggle-btn" data-v="direito" onclick="toggleSelect(this,'f-side')">◉ Direito</button>
-        <button class="toggle-btn" data-v="ambos" onclick="toggleSelect(this,'f-side')">◉ Ambos</button>
+      <label class="form-label">Duração</label>
+      <div class="feed-timer" id="f-timer">
+        <span class="feed-timer-display" id="ft-display">00:00</span>
+        <div class="feed-timer-btns">
+          <button class="timer-btn timer-start" id="ft-start" onclick="startFeedTimer()">▶ Iniciar</button>
+          <button class="timer-btn timer-stop" id="ft-stop" onclick="stopFeedTimer()" style="display:none">⏹ Parar</button>
+        </div>
       </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Duração (minutos)</label>
-      <input type="number" class="form-control" id="f-duration" placeholder="Ex: 15" min="1" max="60">
+      <input type="number" class="form-control" id="f-duration" placeholder="ex: 15 min" min="1" max="180" step="1" inputmode="numeric">
     </div>
   </div>
   <div id="f-formula-group" style="display:none">
@@ -1593,18 +1645,57 @@ function showFeedFields() {
 }
 function saveFeed() {
   const feedType = document.querySelector('#f-type .toggle-btn.active')?.dataset.v || 'breast';
-  const side = document.querySelector('#f-side .toggle-btn.active')?.dataset.v;
   const duration = document.getElementById('f-duration')?.value;
   const amount = document.getElementById('f-amount')?.value;
   const notes = document.getElementById('f-notes').value.trim();
   const timeVal = document.getElementById('f-time').value;
   const today = new Date();
   const ts = new Date(`${today.toISOString().slice(0,10)}T${timeVal}`).getTime();
-  const log = { id: uid(), type: 'feed', feedType, side, duration: duration ? +duration : null, amount: amount ? +amount : null, notes, time: ts, date: todayStr() };
+  const log = { id: uid(), type: 'feed', feedType, duration: duration ? +duration : null, amount: amount ? +amount : null, notes, time: ts, date: todayStr() };
   DB.addLog(log);
   closeSheet();
   showToast('Refeição registada! 🍼');
   renderFeed();
+}
+
+// ── Feed timer ────────────────────────────────────────────────────────────────
+let feedTimer = { running: false, startTs: 0, elapsed: 0, _id: null };
+
+function startFeedTimer() {
+  if (feedTimer.running) return;
+  feedTimer.running = true;
+  feedTimer.startTs = Date.now() - feedTimer.elapsed * 1000;
+  feedTimer._id = setInterval(tickFeedTimer, 500);
+  document.getElementById('ft-start').style.display = 'none';
+  document.getElementById('ft-stop').style.display  = '';
+  document.getElementById('f-timer')?.classList.add('running');
+}
+function stopFeedTimer() {
+  if (!feedTimer.running) return;
+  clearInterval(feedTimer._id);
+  feedTimer.running = false;
+  feedTimer.elapsed = Math.floor((Date.now() - feedTimer.startTs) / 1000);
+  document.getElementById('ft-start').style.display = '';
+  document.getElementById('ft-stop').style.display  = 'none';
+  document.getElementById('f-timer')?.classList.remove('running');
+  const mins = Math.max(1, Math.round(feedTimer.elapsed / 60));
+  const durEl = document.getElementById('f-duration') || document.getElementById('e-fduration');
+  if (durEl) durEl.value = mins;
+  renderTimerDisplay();
+}
+function resetFeedTimer() {
+  clearInterval(feedTimer._id);
+  feedTimer = { running: false, startTs: 0, elapsed: 0, _id: null };
+}
+function tickFeedTimer() {
+  feedTimer.elapsed = Math.floor((Date.now() - feedTimer.startTs) / 1000);
+  renderTimerDisplay();
+}
+function renderTimerDisplay() {
+  const el = document.getElementById('ft-display');
+  if (!el) return;
+  const s = feedTimer.elapsed % 60, m = Math.floor(feedTimer.elapsed / 60);
+  el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
 // ===== DIAPER SCREEN =====
@@ -1853,7 +1944,7 @@ function renderHistory() {
       const titles = { sleep:'Sono', feed:'Alimentação', diaper:'Fralda', med:'Medicamento', growth:'Crescimento' };
       let sub = '';
       if (l.type === 'sleep') sub = l.duration ? fmtDuration(l.duration) : 'A dormir';
-      if (l.type === 'feed') sub = l.feedType === 'breast' ? `Mama ${l.side||''}` : l.feedType === 'formula' ? `Biberão ${l.amount||''}ml` : 'Papinha';
+      if (l.type === 'feed') sub = l.feedType === 'breast' ? `Mama${l.duration ? ` · ${l.duration}min` : ''}` : l.feedType === 'formula' ? `Biberão ${l.amount||''}ml` : 'Papinha';
       if (l.type === 'diaper') sub = l.diaperType === 'wet' ? 'Molhada' : l.diaperType === 'dirty' ? 'Suja' : 'Ambas';
       if (l.type === 'med') sub = `${l.medName||''} ${l.dose||''}`;
       if (l.type === 'growth') sub = l.growthType === 'weight' ? `${l.value}kg` : `${l.value}cm`;
@@ -2045,7 +2136,7 @@ DB.setWaConfig = cfg => DB.set('waConfig', cfg);
 
 // Template variable substitution
 function fillTemplate(tpl, vars) {
-  return tpl.replace(/\{([\w]+)\}/g, (_, k) => vars[k] !== undefined ? vars[k] : `{${k}}`);
+  return tpl.replace(/\{([^}]+)\}/g, (_, k) => vars[k] !== undefined ? vars[k] : `{${k}}`);
 }
 
 function buildSummaryVars() {
@@ -2790,17 +2881,19 @@ function deleteMilestone(id) {
 }
 
 // ===== AUTH =====
-function showLoginScreen() {
+function showLoginScreen(mode) {
   document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('bottom-nav').style.display   = 'none';
+  toggleLoginMode(mode ?? null);
 }
 function hideLoginScreen() {
   document.getElementById('login-screen').style.display = 'none';
 }
-function toggleLoginMode(showRegister) {
-  document.getElementById('login-form').style.display    = showRegister ? 'none'  : 'block';
-  document.getElementById('register-form').style.display = showRegister ? 'block' : 'none';
+function toggleLoginMode(mode) {
+  document.getElementById('login-welcome').style.display  = mode === null  ? 'flex'  : 'none';
+  document.getElementById('login-form').style.display     = mode === false  ? 'block' : 'none';
+  document.getElementById('register-form').style.display  = mode === true   ? 'block' : 'none';
 }
 
 function normalizePhone(raw) {
@@ -2861,7 +2954,7 @@ function logout() {
   API.post('/auth.php?action=logout').catch(() => {});
   localStorage.removeItem('bebe_token');
   localStorage.removeItem('bebe_role');
-  showLoginScreen();
+  showLoginScreen(false);
 }
 
 // ===== SYNC =====

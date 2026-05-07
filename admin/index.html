@@ -159,6 +159,26 @@
           </div>
         </div>
       </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">📤 Enviar mensagem de teste</div></div>
+        <div class="card-body">
+          <div class="fg fg-2" style="max-width:600px">
+            <div class="fgroup">
+              <label class="flabel">Número de destino</label>
+              <input class="finput" id="wa-test-phone" type="tel" placeholder="258841234567" style="font-family:'IBM Plex Mono',monospace">
+            </div>
+          </div>
+          <div class="fgroup" style="max-width:600px;margin-top:16px">
+            <label class="flabel">Mensagem</label>
+            <textarea class="ftextarea" id="wa-test-msg" style="min-height:72px">🌸 Teste bebélog — se recebeu esta mensagem, o WhatsApp está configurado correctamente!</textarea>
+          </div>
+          <div class="factions">
+            <button class="btn btn-primary btn-lg" onclick="sendWaTest()">📤 Enviar agora</button>
+          </div>
+          <div class="fb" id="wa-test-fb"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Templates -->

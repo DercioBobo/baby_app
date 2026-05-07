@@ -241,6 +241,9 @@ async function loadSettings() {
   document.getElementById('wa-enabled').checked      = wa.enabled !== false;
   document.getElementById('wa-welcome').checked      = wa.welcome_enabled !== false;
   setWaStatus(wa.status || 'unknown');
+
+  const testPhoneEl = document.getElementById('wa-test-phone');
+  if (testPhoneEl && !testPhoneEl.value) testPhoneEl.value = myPhone;
 }
 
 function setWaStatus(s) {
@@ -313,7 +316,7 @@ const PREVIEW = {
   proxSono: '15h45', acordada: '2h 15min',
 };
 
-function fillTpl(t, v) { return (t || '').replace(/\{([\w]+)\}/g, (_, k) => v[k] ?? `{${k}}`); }
+function fillTpl(t, v) { return (t || '').replace(/\{([^}]+)\}/g, (_, k) => v[k] ?? `{${k}}`); }
 
 function renderTemplates() {
   const tpl = settings.templates || {};
@@ -337,8 +340,14 @@ function renderTemplates() {
         <div class="tpl-preview" id="prev-${id}">${fillTpl(val, PREVIEW)}</div>
         <div class="factions">
           <button class="btn btn-primary" onclick="saveTpl('${id}')">Guardar template</button>
+          <button class="btn btn-ghost" onclick="toggleTestRow('${id}')">📤 Enviar teste</button>
+        </div>
+        <div class="tpl-test-row" id="test-row-${id}">
+          <input class="finput" id="test-phone-${id}" type="tel" placeholder="258841234567" style="font-family:'IBM Plex Mono',monospace;max-width:240px">
+          <button class="btn btn-primary btn-sm" onclick="sendTestTpl('${id}')">Enviar agora</button>
         </div>
         <div class="fb" id="fb-${id}"></div>
+        <div class="fb" id="fb-test-${id}"></div>
       </div>
     </div>`;
   }).join('');
@@ -361,6 +370,47 @@ function updPreview(id) {
 function resetTpl(id) {
   document.getElementById('ta-' + id).value = DEFAULT_TPL[id];
   updPreview(id);
+}
+
+function toggleTestRow(id) {
+  const row  = document.getElementById('test-row-' + id);
+  const isOpen = row.classList.toggle('open');
+  if (isOpen) {
+    const ph = document.getElementById('test-phone-' + id);
+    if (!ph.value) ph.value = myPhone;
+    ph.focus();
+    fb('fb-test-' + id, '', '');
+  }
+}
+
+async function sendTestTpl(id) {
+  const phoneRaw = document.getElementById('test-phone-' + id).value.trim();
+  if (!phoneRaw) { fb('fb-test-' + id, 'Introduza um número de destino.', 'err'); return; }
+  const tpl = (settings.templates?.[id]) ?? DEFAULT_TPL[id];
+  const msg = fillTpl(tpl, PREVIEW);
+  fb('fb-test-' + id, 'A enviar…', '');
+  if (DEV_MODE) {
+    await new Promise(r => setTimeout(r, 600));
+    fb('fb-test-' + id, `✅ [DEV] Simulado para +${phoneRaw.replace(/\D/g, '')}`, 'ok');
+    return;
+  }
+  const r = await api.post('/send_notification.php', { message: msg, phones: [phoneRaw] });
+  fb('fb-test-' + id, r.ok ? `✅ Enviado para +${phoneRaw.replace(/\D/g, '')}!` : (r.data.error || 'Erro ao enviar.'), r.ok ? 'ok' : 'err');
+}
+
+async function sendWaTest() {
+  const phoneRaw = document.getElementById('wa-test-phone').value.trim();
+  const msg      = document.getElementById('wa-test-msg').value.trim();
+  if (!phoneRaw) { fb('wa-test-fb', 'Introduza um número de destino.', 'err'); return; }
+  if (!msg)      { fb('wa-test-fb', 'Introduza uma mensagem.', 'err'); return; }
+  fb('wa-test-fb', 'A enviar…', '');
+  if (DEV_MODE) {
+    await new Promise(r => setTimeout(r, 600));
+    fb('wa-test-fb', `✅ [DEV] Simulado para +${phoneRaw.replace(/\D/g, '')}`, 'ok');
+    return;
+  }
+  const r = await api.post('/send_notification.php', { message: msg, phones: [phoneRaw] });
+  fb('wa-test-fb', r.ok ? `✅ Mensagem enviada para +${phoneRaw.replace(/\D/g, '')}!` : (r.data.error || 'Erro ao enviar.'), r.ok ? 'ok' : 'err');
 }
 
 async function saveTpl(id) {
