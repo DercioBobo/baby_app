@@ -77,12 +77,22 @@
         <div class="stat-card"><div class="stat-emoji">🟢</div><div class="stat-label">Sessões activas</div><div class="stat-value" id="s-sessions">—</div></div>
         <div class="stat-card"><div class="stat-emoji">✨</div><div class="stat-label">Novos esta semana</div><div class="stat-value" id="s-week">—</div></div>
       </div>
+      <div class="stats-row" style="margin-bottom:26px">
+        <div class="stat-card"><div class="stat-emoji">📋</div><div class="stat-label">Total de registos</div><div class="stat-value" id="s-logs">—</div></div>
+        <div class="stat-card"><div class="stat-emoji">🔥</div><div class="stat-label">Activas hoje</div><div class="stat-value" id="s-today">—</div></div>
+        <div class="stat-card"><div class="stat-emoji">📸</div><div class="stat-label">Momentos de álbum</div><div class="stat-value" id="s-milestones">—</div></div>
+        <div class="stat-card"><div class="stat-emoji">💊</div><div class="stat-label">Doses dadas</div><div class="stat-value" id="s-medlogs">—</div></div>
+      </div>
+      <div class="card" style="margin-bottom:26px">
+        <div class="card-head"><div class="card-title">Registos por tipo</div></div>
+        <div class="card-body" id="s-log-breakdown" style="display:grid;gap:10px"></div>
+      </div>
       <div class="card">
         <div class="card-head"><div class="card-title">Utilizadores recentes</div></div>
         <div class="tbl-wrap">
           <table>
-            <thead><tr><th>Telefone</th><th>Bebé</th><th>Mamã</th><th>Registo</th></tr></thead>
-            <tbody id="recent-tbody"><tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">A carregar…</td></tr></tbody>
+            <thead><tr><th>Bebé</th><th>Mamã</th><th>Telefone</th><th>Registos</th><th>Última activ.</th><th>Registo</th></tr></thead>
+            <tbody id="recent-tbody"><tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">A carregar…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -99,8 +109,8 @@
         </div>
         <div class="tbl-wrap">
           <table>
-            <thead><tr><th>Telefone</th><th>Papel</th><th>Bebé</th><th>Mamã</th><th>Nascimento</th><th>Registo</th><th>Acções</th></tr></thead>
-            <tbody id="users-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">A carregar…</td></tr></tbody>
+            <thead><tr><th>Bebé</th><th>Mamã</th><th>Telefone</th><th>Papel</th><th>Registos</th><th>Última activ.</th><th>Membro desde</th><th>Acções</th></tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">A carregar…</td></tr></tbody>
           </table>
         </div>
       </div>

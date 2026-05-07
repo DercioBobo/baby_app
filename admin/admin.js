@@ -10,12 +10,17 @@ let allUsers = [];
 let settings = {};
 
 // ── Dev mock data ─────────────────────────────────────────────────────────────
-const DEV_STATS = { totalUsers: 12, totalBabies: 10, activeSessions: 3, newThisWeek: 4 };
+const DEV_STATS = {
+  totalUsers: 12, totalBabies: 10, activeSessions: 3, newThisWeek: 4,
+  totalLogs: 348, activeToday: 5, totalMilestones: 24, totalMedLogs: 61,
+  logCounts: { sleep: 120, feed: 98, diaper: 87, growth: 18, med: 25 },
+  regPerDay: [],
+};
 const DEV_USERS = [
-  { id: 1, phone: '258841000001', role: 'admin',     baby_name: null,    mom_name: null,     birth_date: null,         created_at: '2025-01-10T09:00:00Z' },
-  { id: 2, phone: '258841000002', role: 'user',      baby_name: 'Amara', mom_name: 'Sofia',  birth_date: '2025-02-14', created_at: '2025-02-20T11:30:00Z' },
-  { id: 3, phone: '258841000003', role: 'user',      baby_name: 'Liam',  mom_name: 'Beatriz',birth_date: '2024-11-05', created_at: '2024-11-10T08:15:00Z' },
-  { id: 4, phone: '258841000004', role: 'user',      baby_name: null,    mom_name: null,     birth_date: null,         created_at: '2025-04-30T16:00:00Z' },
+  { id: 1, phone: '258841000001', role: 'admin',  baby_name: null,    mom_name: null,      birth_date: null,         created_at: '2025-01-10T09:00:00Z', log_count: 0,   last_activity: null },
+  { id: 2, phone: '258841000002', role: 'user',   baby_name: 'Amara', mom_name: 'Sofia',   birth_date: '2025-02-14', created_at: '2025-02-20T11:30:00Z', log_count: 142, last_activity: Date.now() - 3600000 },
+  { id: 3, phone: '258841000003', role: 'user',   baby_name: 'Liam',  mom_name: 'Beatriz', birth_date: '2024-11-05', created_at: '2024-11-10T08:15:00Z', log_count: 206, last_activity: Date.now() - 7200000 },
+  { id: 4, phone: '258841000004', role: 'user',   baby_name: null,    mom_name: null,      birth_date: null,         created_at: '2025-04-30T16:00:00Z', log_count: 0,   last_activity: null },
 ];
 const DEV_SETTINGS = {
   wa_config: { url: 'https://evo.exemplo.com', instance: 'bebe-instance', apiKey: '••••••••', enabled: true, welcome_enabled: true, status: 'connected' },
@@ -109,10 +114,37 @@ function closeSidebar() {
 // ── Stats ─────────────────────────────────────────────────────────────────────
 async function loadStats() {
   const d = DEV_MODE ? DEV_STATS : (await api.get('/admin/stats.php')).data;
-  document.getElementById('s-users').textContent    = d.totalUsers    ?? '—';
-  document.getElementById('s-babies').textContent   = d.totalBabies   ?? '—';
-  document.getElementById('s-sessions').textContent = d.activeSessions ?? '—';
-  document.getElementById('s-week').textContent     = d.newThisWeek   ?? '—';
+  document.getElementById('s-users').textContent      = d.totalUsers      ?? '—';
+  document.getElementById('s-babies').textContent     = d.totalBabies     ?? '—';
+  document.getElementById('s-sessions').textContent   = d.activeSessions  ?? '—';
+  document.getElementById('s-week').textContent       = d.newThisWeek     ?? '—';
+  document.getElementById('s-logs').textContent       = d.totalLogs       ?? '—';
+  document.getElementById('s-today').textContent      = d.activeToday     ?? '—';
+  document.getElementById('s-milestones').textContent = d.totalMilestones ?? '—';
+  document.getElementById('s-medlogs').textContent    = d.totalMedLogs    ?? '—';
+
+  const lc    = d.logCounts || {};
+  const total = d.totalLogs || 1;
+  const types = [
+    { key: 'sleep',  label: '🌙 Sono',       color: '#7B9FBF' },
+    { key: 'feed',   label: '🍼 Refeição',   color: '#E8968A' },
+    { key: 'diaper', label: '🧷 Fralda',     color: '#C4A87D' },
+    { key: 'med',    label: '💊 Medicamento',color: '#A07BBF' },
+    { key: 'growth', label: '📏 Crescimento',color: '#8DC17A' },
+  ];
+  document.getElementById('s-log-breakdown').innerHTML = types.map(t => {
+    const count = lc[t.key] || 0;
+    const pct   = total ? Math.round((count / total) * 100) : 0;
+    return `<div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span>${t.label}</span>
+        <span style="font-weight:600;color:var(--muted)">${count} <span style="font-weight:400;opacity:.6">(${pct}%)</span></span>
+      </div>
+      <div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${t.color};border-radius:3px;transition:width .6s ease"></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── Users ─────────────────────────────────────────────────────────────────────
@@ -142,19 +174,30 @@ function ageStr(d) {
   return `${Math.floor(months / 12)}a`;
 }
 
+function fmtActivity(tsMs) {
+  if (!tsMs) return '<span class="muted-cell">—</span>';
+  const diff = Date.now() - tsMs;
+  if (diff < 60000)           return '<span style="color:var(--success);font-weight:600">agora</span>';
+  if (diff < 3600000)         return `<span style="color:var(--success)">${Math.floor(diff/60000)}min atrás</span>`;
+  if (diff < 86400000)        return `${Math.floor(diff/3600000)}h atrás`;
+  if (diff < 86400000 * 7)   return `${Math.floor(diff/86400000)}d atrás`;
+  return fmtDate(new Date(tsMs).toISOString());
+}
+
 function renderUsers(list) {
   const tbody = document.getElementById('users-tbody');
   if (!list.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Nenhum utilizador encontrado.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">Nenhum utilizador encontrado.</td></tr>`;
     return;
   }
   tbody.innerHTML = list.map(u => `
     <tr>
+      <td>${u.baby_name ? `<strong>${u.baby_name}</strong> <span class="muted-cell">${u.birth_date ? '('+ageStr(u.birth_date)+')' : ''}</span>` : '<span class="muted-cell">—</span>'}</td>
+      <td>${u.mom_name ? `<span style="font-weight:500">${u.mom_name}</span>` : '<span class="muted-cell">—</span>'}</td>
       <td><span class="mono">+${u.phone}</span></td>
       <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role === 'admin' ? 'Admin' : 'Utilizador'}</span></td>
-      <td>${u.baby_name ? `${u.baby_name} <span class="muted-cell">(${ageStr(u.birth_date)})</span>` : '<span class="muted-cell">—</span>'}</td>
-      <td class="muted-cell">${u.mom_name || '—'}</td>
-      <td class="muted-cell">${u.birth_date ? fmtDate(u.birth_date) : '—'}</td>
+      <td style="font-weight:600;text-align:center">${u.log_count || 0}</td>
+      <td>${fmtActivity(u.last_activity ? u.last_activity * 1 : null)}</td>
       <td class="muted-cell">${fmtDate(u.created_at)}</td>
       <td>
         <div class="actions-cell">
@@ -168,14 +211,16 @@ function renderUsers(list) {
 function renderRecent(list) {
   const tbody = document.getElementById('recent-tbody');
   if (!list.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Sem utilizadores ainda.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Sem utilizadores ainda.</td></tr>`;
     return;
   }
   tbody.innerHTML = list.map(u => `
     <tr>
+      <td>${u.baby_name ? `<strong>${u.baby_name}</strong>` : '<span class="muted-cell">—</span>'}</td>
+      <td>${u.mom_name ? `<span style="font-weight:500">${u.mom_name}</span>` : '<span class="muted-cell">—</span>'}</td>
       <td><span class="mono">+${u.phone}</span></td>
-      <td>${u.baby_name || '<span class="muted-cell">—</span>'}</td>
-      <td class="muted-cell">${u.mom_name || '—'}</td>
+      <td style="font-weight:600;text-align:center">${u.log_count || 0}</td>
+      <td>${fmtActivity(u.last_activity ? u.last_activity * 1 : null)}</td>
       <td class="muted-cell">${fmtDate(u.created_at)}</td>
     </tr>`).join('');
 }

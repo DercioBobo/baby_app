@@ -380,6 +380,9 @@ textarea.form-control { resize: none; min-height: 80px; }
 .album-photo-upload img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .album-photo-upload-icon { font-size: 36px; opacity: .5; }
 .album-photo-upload-text { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.emoji-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.emoji-opt { width: 44px; height: 44px; border-radius: 10px; border: 2px solid var(--primary-light); background: var(--cream); font-size: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; }
+.emoji-opt.selected { border-color: var(--primary); background: var(--primary-soft); transform: scale(1.12); }
 .btn-danger { width: 100%; padding: 13px; border-radius: var(--radius-sm); background: #FFE5E5; color: #C0392B; font-size: 15px; font-weight: 700; cursor: pointer; border: none; margin-top: 10px; }
 
 /* ===== WHATSAPP / EVOLUTION ===== */
@@ -1847,7 +1850,6 @@ function giveMed(medId) {
   DB.addMedLog(log);
   DB.addLog({ id: uid(), type: 'med', medName: med.name, dose: med.dose, time: Date.now(), date: todayStr() });
   showToast(`${med.name} administrado! 💊`);
-  sendMedNotification(med.name, med.dose);
   renderMed();
 }
 function deleteMed(id) {
@@ -2065,15 +2067,15 @@ function renderSettings() {
             </div>
             <div id="wa-user-notifs" style="${userDisabled?'opacity:.4;pointer-events:none':''}">
               <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Tipo de notificações</div>
-              ${notifRow('meds',    '💊 Medicamentos',  'Quando uma dose é administrada')}
-              ${notifRow('summary', '📊 Resumo diário', 'Enviar o resumo do dia')}
-              ${notifRow('sleep',   '⏰ Alerta de sono','Aviso quando está na hora de dormir')}
+              ${notifRow('feed',    '🍼 Lembrete de refeição', 'Aviso quando está na hora de mamar')}
+              ${notifRow('summary', '📊 Resumo diário',        'Enviar o resumo do dia')}
+              ${notifRow('sleep',   '⏰ Alerta de sono',       'Aviso quando está na hora de dormir')}
               <div style="margin-top:16px">
                 <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Números de destino</div>
                 <div id="wa-phones-list">${renderWaPhones()}</div>
                 <div style="display:flex;gap:8px;margin-top:10px">
-                  <input type="tel" class="form-control" id="wa-new-phone" placeholder="841234567" style="flex:1;font-size:14px">
-                  <button class="btn-primary" style="padding:10px 16px;font-size:16px;line-height:1" onclick="addWaPhone()">+</button>
+                  <input type="tel" class="form-control" id="wa-new-phone" placeholder="841234567" style="flex:1;min-width:0;font-size:14px">
+                  <button class="btn-primary" style="flex-shrink:0;width:40px;padding:0;font-size:20px;line-height:1" onclick="addWaPhone()">+</button>
                 </div>
               </div>
               <button class="btn-primary" style="margin-top:16px;width:100%" onclick="sendDailySummary()">📤 Enviar resumo agora</button>
@@ -2146,7 +2148,7 @@ function clearData() {
 // ===== EVOLUTION / WHATSAPP =====
 
 // User config: phones + per-type toggles (set by user in settings)
-DB.waConfig    = () => DB.get('waConfig') || { phones:[], enabled:true, notif:{ meds:true, summary:true, sleep:false, welcome:true } };
+DB.waConfig    = () => DB.get('waConfig') || { phones:[], enabled:true, notif:{ feed:true, summary:true, sleep:false, welcome:true } };
 DB.setWaConfig = cfg => {
   DB.set('waConfig', cfg);
   API.post('/user_settings.php', { waConfig: cfg }).catch(e => console.warn('waConfig sync', e));
@@ -2218,6 +2220,37 @@ async function sendMedNotification(medName, dose) {
   });
   await sendWhatsApp(msg);
 }
+
+// ── Feed reminder ─────────────────────────────────────────────────────────────
+const FEED_REMINDER_INTERVAL_MS = 2.5 * 60 * 60 * 1000; // 2h30m since last feed
+const FEED_REMINDER_COOLDOWN_MS = 30 * 60 * 1000;        // don't re-send within 30min
+
+async function checkFeedReminder() {
+  const waConf = S.settings?.wa_config || {};
+  const wa     = DB.waConfig();
+  if (!waConf.enabled || wa.enabled === false || wa.notif?.feed === false) return;
+  if (!wa.phones?.length) return;
+  if (!S.profile) return;
+
+  const feeds   = DB.logs().filter(l => l.type === 'feed');
+  const lastFeed = feeds.length ? feeds.reduce((a, b) => a.time > b.time ? a : b) : null;
+  const elapsed  = lastFeed ? Date.now() - lastFeed.time : Infinity;
+  if (elapsed < FEED_REMINDER_INTERVAL_MS) return;
+
+  const lastSent = parseInt(localStorage.getItem('bebe_last_feed_reminder') || '0', 10);
+  if (Date.now() - lastSent < FEED_REMINDER_COOLDOWN_MS) return;
+
+  const p       = S.profile;
+  const timeAgo = fmtDuration(elapsed);
+  const msg     = `🍼 *Hora da refeição!*\n\n${p.name} não mama há ${timeAgo}.\n\n_bebélog_ 💕`;
+  const sent    = await sendWhatsApp(msg);
+  if (sent) {
+    localStorage.setItem('bebe_last_feed_reminder', String(Date.now()));
+    showToast('🍼 Lembrete de refeição enviado!');
+  }
+}
+
+setInterval(checkFeedReminder, 5 * 60 * 1000);
 
 async function sendWelcomeNotification() {
   const waConf = S.settings?.wa_config || {};
@@ -2817,8 +2850,9 @@ function buildMilestoneAddSheet(target) {
     <input type="text" class="form-control" id="m-name" placeholder="Ex: Primeiro sorriso para o pai...">
   </div>
   <div class="form-group">
-    <label class="form-label">Emoji</label>
-    <input type="text" class="form-control" id="m-emoji" placeholder="⭐" maxlength="2" style="font-size:24px;text-align:center">
+    <label class="form-label">Ícone</label>
+    <input type="hidden" id="m-emoji" value="⭐">
+    <div class="emoji-picker">${['⭐','💕','🎉','😊','😂','🥇','🦷','👣','🛁','🌙','🍼','🎂','📷','🌸','🌈','💪','🤗','👋','🚗','✈️','🏖️','🎁','🎵','🐣'].map(e=>`<div class="emoji-opt${e==='⭐'?' selected':''}" onclick="selectEmoji(this,'${e}')">${e}</div>`).join('')}</div>
   </div>` : `<div style="text-align:center;font-size:52px;margin-bottom:16px">${preset.emoji}</div>`}
   <div class="form-group">
     <label class="form-label">Foto (opcional)</label>
@@ -2865,6 +2899,7 @@ function buildMilestoneViewSheet(m) {
   <div class="album-detail-date">${dateStr}</div>
   <div class="album-detail-age">Com ${ageStr} de idade 🌱</div>
   ${m.note ? `<div class="album-detail-note">"${m.note}"</div>` : ''}
+  <button class="btn-primary" style="margin-bottom:10px" onclick="shareOnWhatsApp('${m.id}')">💬 Partilhar no WhatsApp</button>
   <button class="btn-danger" onclick="deleteMilestone('${m.id}')">Apagar este momento</button>`;
 }
 
@@ -2874,6 +2909,27 @@ async function handleMilestonePhoto(e) {
   const el = document.getElementById('milestonePhotoUpload');
   el.innerHTML = `<img src="${data}" alt="foto">`;
   el.dataset.photo = data;
+}
+
+function shareOnWhatsApp(id) {
+  const m      = (DB.milestones() || []).find(x => x.id === id);
+  if (!m) return;
+  const preset = MILESTONE_PRESETS.find(p => p.id === m.presetId);
+  const emoji  = preset ? preset.emoji : (m.emoji || '⭐');
+  const name   = preset ? preset.name  : m.name;
+  const dateStr= new Date(m.date).toLocaleDateString('pt-PT', { day:'numeric', month:'long', year:'numeric' });
+  const p      = S.profile || {};
+  let text = `${emoji} *${name}*\n📅 ${dateStr}`;
+  if (p.name) text += `\n👶 ${p.name}`;
+  if (m.note) text += `\n\n"${m.note}"`;
+  text += '\n\n_bebélog_ 💕';
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function selectEmoji(el, emoji) {
+  document.querySelectorAll('.emoji-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('m-emoji').value = emoji;
 }
 
 function saveMilestone() {

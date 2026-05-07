@@ -8,9 +8,13 @@ $db = db();
 if (method() === 'GET') {
   $stmt = $db->query(
     'SELECT u.id, u.phone, u.role, u.created_at,
-            b.name AS baby_name, b.birth_date, b.mom_name
+            b.name AS baby_name, b.birth_date, b.mom_name,
+            COUNT(l.id)    AS log_count,
+            MAX(l.time_ts) AS last_activity
      FROM users u
      LEFT JOIN babies b ON b.user_id = u.id
+     LEFT JOIN logs   l ON l.user_id = u.id
+     GROUP BY u.id, u.phone, u.role, u.created_at, b.name, b.birth_date, b.mom_name
      ORDER BY u.created_at DESC'
   );
   respond($stmt->fetchAll());
