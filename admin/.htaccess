@@ -1,0 +1,10 @@
+# Optional extra HTTP-level protection on top of token auth.
+# Uncomment and set credentials below to enable Basic Auth.
+#
+# To generate password hash: htpasswd -nb admin yourpassword
+# Then replace "admin:..." below.
+#
+# AuthType Basic
+# AuthName "bebélog admin"
+# AuthUserFile /path/to/.htpasswd
+# Require valid-user

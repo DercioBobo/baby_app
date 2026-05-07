@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\DBobo\\\\PhpstormProjects\\\\baby_app\\\\index.html\" | Measure-Object -Line\\).Lines)",
+      "WebFetch(domain:doc.evolution-api.com)",
+      "PowerShell(New-Item *)",
+      "PowerShell(Get-ChildItem -Recurse \"C:\\\\Users\\\\DBobo\\\\PhpstormProjects\\\\baby_app\\\\\" | Where-Object { !$_.PSIsContainer } | Select-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\DBobo\\\\PhpstormProjects\\\\baby_app\\\\\" -Recurse -File | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\DBobo\\\\PhpstormProjects\\\\baby_app\\\\\",\"\"\\) })"
+    ]
+  }
+}

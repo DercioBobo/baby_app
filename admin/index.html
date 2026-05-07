@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bebélog — Administração</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-page" class="login-page" style="display:none">
+  <div class="login-box">
+    <div class="login-rose">🌸</div>
+    <div class="login-title">bebélog</div>
+    <div class="login-sub">Painel de administração</div>
+    <label class="f-label" for="adm-phone">Número de telefone</label>
+    <input class="f-input" id="adm-phone" type="tel" placeholder="841234567" autocomplete="tel">
+    <label class="f-label" for="adm-pass">Senha</label>
+    <input class="f-input" id="adm-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- App shell -->
+<div class="shell" id="shell" style="display:none">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <span class="topbar-brand">🌸 bebélog</span>
+    <span class="topbar-tag">Admin</span>
+    <div class="topbar-gap"></div>
+    <div class="topbar-info">Admin: <span class="topbar-phone" id="hdr-phone"></span></div>
+    <button class="topbar-logout" onclick="doLogout()">Sair</button>
+  </header>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="nav-group">
+      <div class="nav-group-label">Principal</div>
+      <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+      <div class="nav-item" data-page="users" onclick="nav('users')"><span class="nav-icon">👤</span>Utilizadores</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Notificações</div>
+      <div class="nav-item" data-page="whatsapp" onclick="nav('whatsapp')"><span class="nav-icon">💬</span>WhatsApp</div>
+      <div class="nav-item" data-page="templates" onclick="nav('templates')"><span class="nav-icon">📝</span>Templates</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Sistema</div>
+      <div class="nav-item" data-page="settings" onclick="nav('settings')"><span class="nav-icon">⚙️</span>Definições</div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="content">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Visão geral da aplicação bebélog</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-emoji">👤</div><div class="stat-label">Utilizadores</div><div class="stat-value" id="s-users">—</div></div>
+        <div class="stat-card"><div class="stat-emoji">👶</div><div class="stat-label">Bebés registados</div><div class="stat-value" id="s-babies">—</div></div>
+        <div class="stat-card"><div class="stat-emoji">🟢</div><div class="stat-label">Sessões activas</div><div class="stat-value" id="s-sessions">—</div></div>
+        <div class="stat-card"><div class="stat-emoji">✨</div><div class="stat-label">Novos esta semana</div><div class="stat-value" id="s-week">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Utilizadores recentes</div></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Telefone</th><th>Bebé</th><th>Mamã</th><th>Registo</th></tr></thead>
+            <tbody id="recent-tbody"><tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">A carregar…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div class="page" id="page-users">
+      <div class="page-title">Utilizadores</div>
+      <div class="page-sub">Gerir contas, bebés e acessos</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Todos os utilizadores</div>
+          <input class="search-input" type="search" id="user-search" placeholder="Pesquisar…" oninput="filterUsers()">
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Telefone</th><th>Papel</th><th>Bebé</th><th>Mamã</th><th>Nascimento</th><th>Registo</th><th>Acções</th></tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">A carregar…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- WhatsApp -->
+    <div class="page" id="page-whatsapp">
+      <div class="page-title">WhatsApp / Evolution API</div>
+      <div class="page-sub">Configuração da ligação e notificações globais</div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Ligação Evolution API</div></div>
+        <div class="card-body">
+          <div class="status-line" id="wa-status-line">
+            <span class="dot dot-gray" id="wa-dot"></span>
+            <span id="wa-status-text">Estado não verificado</span>
+          </div>
+          <div class="fg fg-3">
+            <div class="fgroup">
+              <label class="flabel">URL do servidor</label>
+              <input class="finput" id="wa-url" type="url" placeholder="https://evo.exemplo.com">
+            </div>
+            <div class="fgroup">
+              <label class="flabel">Nome da instância</label>
+              <input class="finput" id="wa-instance" type="text" placeholder="bebe-instance">
+            </div>
+            <div class="fgroup">
+              <label class="flabel">API Key</label>
+              <input class="finput" id="wa-key" type="password" placeholder="••••••••••••">
+            </div>
+          </div>
+          <div class="factions">
+            <button class="btn btn-primary btn-lg" onclick="saveWa()">Guardar</button>
+            <button class="btn btn-ghost btn-lg" onclick="testWa()">🔌 Testar ligação</button>
+          </div>
+          <div class="fb" id="wa-fb"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-title">Notificações globais</div></div>
+        <div class="card-body">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Activar notificações WhatsApp</div>
+              <div class="toggle-sub">Liga ou desliga todas as notificações globalmente</div>
+            </div>
+            <label class="toggle-sw"><input type="checkbox" id="wa-enabled" onchange="saveWaToggles()"><span class="toggle-track"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">🌸 Mensagem de boas-vindas</div>
+              <div class="toggle-sub">Enviada automaticamente quando uma nova conta é criada</div>
+            </div>
+            <label class="toggle-sw"><input type="checkbox" id="wa-welcome" onchange="saveWaToggles()"><span class="toggle-track"></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Templates -->
+    <div class="page" id="page-templates">
+      <div class="page-title">Templates de notificação</div>
+      <div class="page-sub">Personalize o texto das mensagens. Clique nas variáveis para as inserir no cursor.</div>
+      <div id="tpl-container"><div style="text-align:center;padding:32px;color:var(--muted)">A carregar…</div></div>
+    </div>
+
+    <!-- Settings -->
+    <div class="page" id="page-settings">
+      <div class="page-title">Definições</div>
+      <div class="page-sub">Configurações gerais do sistema</div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Conta de administrador</div></div>
+        <div class="card-body">
+          <div class="fg" style="max-width:340px">
+            <div class="fgroup">
+              <label class="flabel">Telefone admin</label>
+              <input class="finput" id="s-admin-phone" type="tel" readonly style="background:#f8fafc;font-family:'IBM Plex Mono',monospace;cursor:default">
+            </div>
+          </div>
+          <p class="fhint" style="margin-top:10px">Para alterar o número administrador, edite <code>api/config.php</code> no servidor.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Alterar senha</div></div>
+        <div class="card-body">
+          <div class="fg fg-2" style="max-width:480px">
+            <div class="fgroup">
+              <label class="flabel">Nova senha</label>
+              <input class="finput" id="s-newpass" type="password" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="fgroup">
+              <label class="flabel">Confirmar senha</label>
+              <input class="finput" id="s-confirm" type="password" placeholder="Repetir">
+            </div>
+          </div>
+          <div class="factions">
+            <button class="btn btn-primary" onclick="changePass()">Alterar senha</button>
+          </div>
+          <div class="fb" id="pass-fb"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal: Reset password -->
+<div class="modal-bg" id="modal-reset" style="display:none" onclick="if(event.target===this)closeModal('reset')">
+  <div class="modal-box">
+    <div class="modal-title">Redefinir senha</div>
+    <div class="modal-sub" id="modal-reset-sub">—</div>
+    <input type="hidden" id="modal-reset-id">
+    <div class="fgroup">
+      <label class="flabel">Nova senha</label>
+      <input class="finput" id="modal-reset-pass" type="password" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="fb" id="modal-reset-fb"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('reset')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitReset()">Guardar senha</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Delete user -->
+<div class="modal-bg" id="modal-delete" style="display:none" onclick="if(event.target===this)closeModal('delete')">
+  <div class="modal-box">
+    <div class="modal-title">⚠️ Eliminar utilizador</div>
+    <div class="modal-sub" id="modal-delete-sub">Esta acção é irreversível e apagará todos os dados do utilizador.</div>
+    <input type="hidden" id="modal-delete-id">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('delete')">Cancelar</button>
+      <button class="btn btn-danger btn-lg" onclick="submitDelete()">Eliminar definitivamente</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

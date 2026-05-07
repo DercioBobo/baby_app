@@ -1,0 +1,2924 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#E8968A">
+<title>Bebé — O meu registo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS VARIABLES & RESET ===== */
+:root {
+  --primary: #E8968A;
+  --primary-light: #F5C4BB;
+  --primary-dark: #C47B72;
+  --primary-soft: #FDE8E5;
+  --cream: #FDF8F3;
+  --cream-dark: #F5EDE3;
+  --text: #3D2B27;
+  --text-soft: #7A5C57;
+  --text-muted: #B08A85;
+  --white: #FFFFFF;
+  --card: #FFFFFF;
+  --border: rgba(200,160,155,0.2);
+  --shadow: 0 4px 24px rgba(61,43,39,0.08);
+  --shadow-sm: 0 2px 12px rgba(61,43,39,0.06);
+  --radius: 20px;
+  --radius-sm: 12px;
+  --nav-h: 72px;
+  --header-h: 70px;
+  --sleep-color: #7B9FBF;
+  --feed-color: #8DC17A;
+  --diaper-color: #C4A87D;
+  --med-color: #A07BBF;
+  --growth-color: #BF8DA0;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; width: 100%; overflow: hidden; background: var(--cream); color: var(--text); font-family: 'Nunito', sans-serif; -webkit-font-smoothing: antialiased; }
+button { border: none; background: none; cursor: pointer; font-family: inherit; color: inherit; }
+input, textarea, select { font-family: inherit; color: var(--text); }
+img { max-width: 100%; }
+a { text-decoration: none; color: inherit; }
+
+/* ===== APP SHELL ===== */
+#app { height: 100dvh; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; position: relative; overflow: hidden; background: var(--cream); }
+
+/* ===== SCREENS ===== */
+.screens { flex: 1; position: relative; overflow: hidden; }
+.screen { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + 16px); opacity: 0; pointer-events: none; transform: translateX(30px); transition: opacity .3s ease, transform .3s ease; }
+.screen.active { opacity: 1; pointer-events: all; transform: translateX(0); }
+.screen.slide-out { opacity: 0; transform: translateX(-30px); }
+
+/* ===== HEADER ===== */
+.app-header { position: sticky; top: 0; z-index: 100; background: var(--cream); padding: 14px 20px 10px; display: flex; align-items: center; gap: 12px; }
+.header-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2.5px solid var(--primary); flex-shrink: 0; background: var(--primary-soft); display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; }
+.header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.header-info { flex: 1; min-width: 0; }
+.header-greeting { font-size: 11px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.3px; }
+.header-name { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; color: var(--text); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header-age { font-size: 11px; color: var(--text-soft); font-weight: 500; }
+.header-action { width: 36px; height: 36px; border-radius: 50%; background: var(--card); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav { height: var(--nav-h); background: var(--white); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; padding: 0 8px; padding-bottom: env(safe-area-inset-bottom, 0); position: relative; z-index: 200; box-shadow: 0 -4px 24px rgba(61,43,39,0.06); }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; border-radius: var(--radius-sm); transition: all .2s ease; position: relative; }
+.nav-btn .nav-icon { font-size: 22px; line-height: 1; transition: transform .2s ease; }
+.nav-btn .nav-label { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.2px; transition: color .2s ease; }
+.nav-btn.active .nav-label { color: var(--primary); }
+.nav-btn.active .nav-icon { transform: translateY(-2px); }
+.nav-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: var(--primary); border-radius: 2px 2px 0 0; }
+
+/* ===== MAIS MENU ===== */
+.mais-overlay { position: fixed; inset: 0; background: rgba(61,43,39,0.3); z-index: 150; opacity: 0; pointer-events: none; transition: opacity .3s ease; backdrop-filter: blur(4px); }
+.mais-overlay.open { opacity: 1; pointer-events: all; }
+.mais-menu { position: fixed; bottom: var(--nav-h); left: 50%; transform: translateX(-50%) translateY(20px); width: min(390px, 96vw); background: var(--white); border-radius: var(--radius) var(--radius) 0 0; padding: 20px; z-index: 160; opacity: 0; pointer-events: none; transition: all .3s cubic-bezier(.34,1.56,.64,1); box-shadow: 0 -8px 40px rgba(61,43,39,0.15); }
+.mais-menu.open { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+.mais-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.mais-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mais-item.featured { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 12px; background: linear-gradient(135deg, var(--primary-soft) 0%, var(--cream-dark) 100%); border: 2px solid var(--primary-light); padding: 14px 20px; }
+.mais-item.featured .mais-item-label { font-size: 15px; color: var(--primary); }
+.mais-item { background: var(--cream); border-radius: var(--radius-sm); padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: all .2s ease; border: 2px solid transparent; }
+.mais-item:active { transform: scale(.97); }
+.mais-item.active-section { border-color: var(--primary); background: var(--primary-soft); }
+.mais-item-icon { font-size: 28px; }
+.mais-item-label { font-size: 13px; font-weight: 600; color: var(--text-soft); }
+
+/* ===== CARDS ===== */
+.card { background: var(--card); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); }
+.card-sm { padding: 14px; border-radius: var(--radius-sm); }
+.screen-content { padding: 0 16px; }
+
+/* ===== DASHBOARD ===== */
+.hero-card { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: var(--radius); padding: 24px 20px; color: white; margin-bottom: 20px; position: relative; overflow: hidden; }
+.hero-card::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+.hero-card::after { content: ''; position: absolute; bottom: -20px; right: 40px; width: 80px; height: 80px; background: rgba(255,255,255,0.08); border-radius: 50%; }
+.hero-greeting { font-size: 13px; opacity: 0.85; margin-bottom: 4px; }
+.hero-name { font-family: 'Lora', serif; font-size: 26px; font-weight: 600; margin-bottom: 2px; }
+.hero-age { font-size: 13px; opacity: 0.8; margin-bottom: 16px; }
+.sleep-status { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); border-radius: 30px; padding: 8px 14px; font-size: 13px; font-weight: 600; }
+.sleep-dot { width: 8px; height: 8px; border-radius: 50%; background: white; animation: pulse-dot 1.5s infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+.hero-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.hero-btn { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.22); border: 2px solid rgba(255,255,255,0.4); border-radius: 30px; padding: 9px 18px; font-size: 13px; font-weight: 700; color: white; cursor: pointer; transition: all .2s ease; backdrop-filter: blur(4px); }
+.hero-btn:active { transform: scale(.96); background: rgba(255,255,255,0.32); }
+.hero-btn.stop { background: rgba(255,255,255,0.9); color: var(--sleep-color); border-color: transparent; }
+.hero-btn.stop:active { background: rgba(255,255,255,1); }
+
+.quick-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.stat-card { background: var(--card); border-radius: var(--radius-sm); padding: 14px; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform .2s ease; display: flex; flex-direction: column; gap: 6px; }
+.stat-card:active { transform: scale(.97); }
+.stat-icon { font-size: 22px; }
+.stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--text); line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--text-soft); }
+
+.section-title { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.section-title-action { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600; color: var(--primary); }
+
+.sleep-prediction { background: var(--card); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+.prediction-row { display: flex; align-items: center; gap: 12px; }
+.prediction-indicator { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.prediction-indicator.green { background: #E8F5E2; }
+.prediction-indicator.yellow { background: #FFF8E1; }
+.prediction-indicator.red { background: #FFEBEE; }
+.prediction-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.prediction-time { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--text); }
+.prediction-confidence { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+
+/* ===== FAB ===== */
+.fab-container { position: fixed; bottom: calc(var(--nav-h) + 16px); right: 16px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; z-index: 100; }
+.fab { width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: white; box-shadow: 0 4px 20px rgba(232,150,138,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: all .2s cubic-bezier(.34,1.56,.64,1); }
+.fab:active { transform: scale(.92); }
+.fab-main { width: 56px; height: 56px; font-size: 26px; }
+.fab-mini { width: 44px; height: 44px; font-size: 20px; background: var(--white); color: var(--text); box-shadow: var(--shadow); opacity: 0; transform: scale(0) translateY(10px); pointer-events: none; transition: all .25s cubic-bezier(.34,1.56,.64,1); }
+.fab-mini.visible { opacity: 1; transform: scale(1) translateY(0); pointer-events: all; }
+.fab-mini-label { font-size: 11px; font-weight: 700; color: var(--text); background: var(--white); padding: 4px 10px; border-radius: 20px; box-shadow: var(--shadow-sm); white-space: nowrap; opacity: 0; pointer-events: none; transition: all .25s ease; }
+.fab-mini-label.visible { opacity: 1; pointer-events: all; }
+.fab-mini-row { display: flex; align-items: center; gap: 8px; }
+
+/* ===== MODAL / SHEET ===== */
+.sheet-overlay { position: fixed; inset: 0; background: rgba(61,43,39,0.35); z-index: 500; opacity: 0; pointer-events: none; transition: opacity .3s ease; backdrop-filter: blur(6px); }
+.sheet-overlay.open { opacity: 1; pointer-events: all; }
+.sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%); width: min(430px, 100vw); background: var(--white); border-radius: var(--radius) var(--radius) 0 0; z-index: 510; padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0)); transition: transform .4s cubic-bezier(.34,1.2,.64,1); max-height: 92dvh; overflow-y: auto; }
+.sheet.open { transform: translateX(-50%) translateY(0); }
+.sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.sheet-title { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+
+/* ===== FORMS ===== */
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+.form-control { width: 100%; padding: 13px 16px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; background: var(--cream); color: var(--text); outline: none; transition: border-color .2s ease; }
+.form-control:focus { border-color: var(--primary); background: var(--white); }
+.form-control::placeholder { color: var(--text-muted); }
+textarea.form-control { resize: none; min-height: 80px; }
+
+.toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.toggle-btn { padding: 8px 16px; border-radius: 30px; border: 2px solid var(--border); font-size: 13px; font-weight: 600; color: var(--text-soft); background: var(--cream); cursor: pointer; transition: all .2s ease; }
+.toggle-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+
+.btn-primary { width: 100%; padding: 15px; border-radius: var(--radius-sm); background: var(--primary); color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all .2s ease; box-shadow: 0 4px 16px rgba(232,150,138,0.35); border: none; }
+.btn-primary:active { transform: scale(.98); }
+.btn-secondary { width: 100%; padding: 13px; border-radius: var(--radius-sm); background: var(--cream); color: var(--text); font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s ease; border: 2px solid var(--border); margin-top: 10px; }
+
+/* ===== SUCCESS TOAST ===== */
+.toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--text); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 1000; transition: transform .4s cubic-bezier(.34,1.56,.64,1); white-space: nowrap; box-shadow: var(--shadow); display: flex; align-items: center; gap: 8px; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast-check { width: 20px; height: 20px; border-radius: 50%; background: #4CAF50; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state { text-align: center; padding: 40px 24px; }
+.empty-state-icon { font-size: 52px; margin-bottom: 16px; opacity: 0.6; }
+.empty-state-text { font-family: 'Lora', serif; font-size: 17px; color: var(--text-soft); margin-bottom: 8px; }
+.empty-state-sub { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+/* ===== LOG LIST ===== */
+.log-list { display: flex; flex-direction: column; gap: 10px; }
+.log-item { background: var(--card); border-radius: var(--radius-sm); padding: 14px; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 14px; }
+.log-item-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.log-item-icon.sleep { background: rgba(123,159,191,0.15); }
+.log-item-icon.feed { background: rgba(141,193,122,0.15); }
+.log-item-icon.diaper { background: rgba(196,168,125,0.15); }
+.log-item-icon.med { background: rgba(160,123,191,0.15); }
+.log-item-body { flex: 1; min-width: 0; }
+.log-item-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.log-item-sub { font-size: 12px; color: var(--text-muted); }
+.log-item-time { font-size: 12px; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+.log-item-delete { width: 28px; height: 28px; border-radius: 50%; background: #FFE5E5; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; flex-shrink: 0; transition: all .2s; }
+.log-item-delete:active { transform: scale(.9); }
+.log-item-edit { width: 28px; height: 28px; border-radius: 50%; background: var(--cream-dark); display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; flex-shrink: 0; transition: all .2s; }
+.log-item-edit:active { transform: scale(.9); }
+
+/* ===== SVG CHART ===== */
+.chart-container { background: var(--card); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+.chart-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+.chart-svg { width: 100%; overflow: visible; }
+.chart-bar { transition: height .4s ease, y .4s ease; }
+.chart-day-label { font-size: 9px; fill: var(--text-muted); font-family: 'Nunito', sans-serif; }
+
+/* ===== SLEEP SCREEN ===== */
+.timer-card { background: linear-gradient(135deg, var(--sleep-color) 0%, #5A7A9F 100%); border-radius: var(--radius); padding: 28px 20px; text-align: center; color: white; margin-bottom: 20px; }
+.timer-display { font-family: 'Lora', serif; font-size: 48px; font-weight: 600; letter-spacing: 2px; margin-bottom: 8px; }
+.timer-label { font-size: 13px; opacity: 0.85; margin-bottom: 20px; }
+.timer-btn { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.4); border-radius: 30px; padding: 12px 28px; font-size: 15px; font-weight: 700; color: white; cursor: pointer; transition: all .2s ease; backdrop-filter: blur(4px); }
+.timer-btn:active { transform: scale(.97); }
+.sleep-time-adjust { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.sleep-time-adjust label { font-size: 12px; opacity: 0.75; }
+.sleep-time-adjust input[type="time"] { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); border-radius: 8px; color: white; font-size: 13px; font-weight: 600; padding: 4px 8px; outline: none; width: 82px; }
+.sleep-time-adjust input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.7); cursor: pointer; }
+.sleep-adjust-link { font-size: 11px; opacity: 0.7; text-decoration: underline; cursor: pointer; margin-top: 4px; display: block; }
+.sleep-adjust-link:hover { opacity: 1; }
+
+/* ===== ONBOARDING ===== */
+#screen-onboarding { padding: 0; background: var(--cream); overflow-y: auto; }
+.onboarding-wrap { min-height: 100dvh; display: flex; flex-direction: column; padding: 40px 24px 40px; }
+.onboarding-logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+.onboarding-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 40px; line-height: 1.5; }
+.onboarding-title { font-family: 'Lora', serif; font-size: 26px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.onboarding-desc { font-size: 14px; color: var(--text-soft); margin-bottom: 32px; line-height: 1.6; }
+.photo-upload { width: 100px; height: 100px; border-radius: 50%; border: 3px dashed var(--primary-light); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto 24px; background: var(--primary-soft); transition: all .2s; position: relative; overflow: hidden; }
+.photo-upload:active { transform: scale(.97); }
+.photo-upload img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.photo-upload-icon { font-size: 30px; opacity: .5; }
+.photo-upload-text { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.onboarding-footer { margin-top: auto; padding-top: 32px; }
+
+/* ===== SETTINGS ===== */
+.settings-section { margin-bottom: 24px; }
+.settings-section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; padding-left: 4px; }
+.settings-item { background: var(--card); border-radius: var(--radius-sm); padding: 15px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; box-shadow: var(--shadow-sm); cursor: pointer; }
+.settings-item-left { display: flex; align-items: center; gap: 12px; }
+.settings-item-icon { font-size: 20px; width: 36px; height: 36px; background: var(--cream-dark); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.settings-item-label { font-size: 15px; font-weight: 600; }
+.settings-item-arrow { color: var(--text-muted); font-size: 16px; }
+
+.color-swatches { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.color-swatch { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all .2s ease; }
+.color-swatch.selected { border-color: var(--text); transform: scale(1.1); }
+
+/* ===== HISTORY ===== */
+.history-date-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: var(--card); border-radius: var(--radius-sm); padding: 12px 16px; box-shadow: var(--shadow-sm); }
+.history-date-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--cream); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
+.history-date { font-family: 'Lora', serif; font-size: 16px; font-weight: 600; }
+.timeline { position: relative; padding-left: 28px; }
+.timeline::before { content: ''; position: absolute; left: 11px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+.timeline-item { position: relative; margin-bottom: 16px; }
+.timeline-dot { position: absolute; left: -22px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; top: 4px; }
+.timeline-dot.sleep { background: var(--sleep-color); }
+.timeline-dot.feed { background: var(--feed-color); }
+.timeline-dot.diaper { background: var(--diaper-color); }
+.timeline-dot.med { background: var(--med-color); }
+
+/* ===== GROWTH CHART ===== */
+.growth-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.growth-tab { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 2px solid var(--border); font-size: 13px; font-weight: 700; color: var(--text-soft); background: var(--cream); cursor: pointer; text-align: center; transition: all .2s; }
+.growth-tab.active { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+.growth-stat { background: var(--card); border-radius: var(--radius-sm); padding: 16px; box-shadow: var(--shadow-sm); text-align: center; }
+.growth-stat-value { font-family: 'Lora', serif; font-size: 32px; font-weight: 600; color: var(--text); }
+.growth-stat-unit { font-size: 14px; color: var(--text-muted); margin-left: 4px; }
+.growth-stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* ===== MED CARD ===== */
+.med-card { background: var(--card); border-radius: var(--radius-sm); padding: 16px; box-shadow: var(--shadow-sm); margin-bottom: 10px; display: flex; align-items: center; gap: 14px; }
+.med-icon { width: 44px; height: 44px; background: rgba(160,123,191,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.med-body { flex: 1; min-width: 0; }
+.med-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.med-dose { font-size: 13px; color: var(--text-soft); }
+.med-next { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 4px; }
+.med-action { display: flex; flex-direction: column; gap: 4px; }
+.med-btn { padding: 6px 12px; border-radius: 20px; background: var(--primary-soft); color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .2s; }
+.med-btn:active { transform: scale(.95); }
+.med-delete { padding: 6px 12px; border-radius: 20px; background: #FFE5E5; color: #C0392B; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .2s; }
+
+/* ===== INSIGHTS ===== */
+.insights-period-tabs { display: flex; gap: 6px; margin-bottom: 20px; background: var(--card); border-radius: var(--radius-sm); padding: 5px; box-shadow: var(--shadow-sm); }
+.period-tab { flex: 1; padding: 9px 4px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; text-align: center; transition: all .2s ease; }
+.period-tab.active { background: var(--primary); color: white; box-shadow: 0 2px 10px rgba(232,150,138,0.35); }
+.status-card { border-radius: var(--radius); padding: 22px 20px; margin-bottom: 16px; position: relative; overflow: hidden; }
+.status-card.excellent { background: linear-gradient(135deg, #6DBF8A 0%, #4A9E6A 100%); }
+.status-card.good { background: linear-gradient(135deg, #7BB8BF 0%, #5A96A0 100%); }
+.status-card.attention { background: linear-gradient(135deg, #E8C17A 0%, #C49A4A 100%); }
+.status-card-emoji { font-size: 36px; margin-bottom: 10px; }
+.status-card-title { font-family: 'Lora', serif; font-size: 22px; font-weight: 600; color: white; margin-bottom: 4px; }
+.status-card-sub { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+.status-card-deco { position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+.insight-card { background: var(--card); border-radius: var(--radius-sm); padding: 16px; box-shadow: var(--shadow-sm); margin-bottom: 12px; }
+.insight-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.insight-card-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+.insight-card-title-icon { font-size: 16px; }
+.insight-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.insight-status-dot.green { background: #5DBF7A; }
+.insight-status-dot.yellow { background: #E8C17A; }
+.insight-status-dot.red { background: #E87A7A; }
+.insight-metrics { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 8px; }
+.insight-value { font-family: 'Lora', serif; font-size: 30px; font-weight: 600; color: var(--text); line-height: 1; }
+.insight-unit { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+.insight-vs { font-size: 12px; color: var(--text-muted); background: var(--cream-dark); border-radius: 20px; padding: 2px 8px; margin-bottom: 4px; }
+.insight-text { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
+.insight-bar-wrap { height: 6px; background: var(--cream-dark); border-radius: 3px; margin: 10px 0 6px; overflow: hidden; }
+.insight-bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+.insight-bar-fill.green { background: #5DBF7A; }
+.insight-bar-fill.yellow { background: #E8C17A; }
+.insight-bar-fill.red { background: #E87A7A; }
+.insight-range { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); }
+.tip-card { background: linear-gradient(135deg, var(--primary-soft) 0%, var(--cream-dark) 100%); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--primary); }
+.tip-card-label { font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+.tip-card-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+.week-bars { display: flex; align-items: flex-end; gap: 4px; height: 40px; margin: 12px 0 6px; }
+.week-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; justify-content: flex-end; }
+.week-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; transition: height .4s ease; }
+.week-bar-label { font-size: 9px; color: var(--text-muted); font-weight: 600; }
+.compare-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.compare-row:last-child { border-bottom: none; }
+.compare-label { font-size: 13px; color: var(--text-soft); flex: 1; }
+.compare-val { font-size: 14px; font-weight: 700; color: var(--text); }
+.compare-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.compare-badge.up { background: #E5F7EC; color: #3D9A5C; }
+.compare-badge.down { background: #FFEBEE; color: #C0392B; }
+.compare-badge.same { background: var(--cream-dark); color: var(--text-muted); }
+.milestone-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.milestone-item:last-child { border-bottom: none; }
+.milestone-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.milestone-text { font-size: 13px; color: var(--text); line-height: 1.5; flex: 1; }
+.milestone-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 14px; }
+
+/* ===== ALBUM ===== */
+.album-hero { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; color: white; position: relative; overflow: hidden; }
+.album-hero::before { content: ''; position: absolute; top: -25px; right: -25px; width: 110px; height: 110px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+.album-hero-title { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.album-hero-sub { font-size: 13px; opacity: 0.85; margin-bottom: 14px; }
+.album-progress-bar { height: 6px; background: rgba(255,255,255,0.25); border-radius: 3px; overflow: hidden; }
+.album-progress-fill { height: 100%; background: white; border-radius: 3px; transition: width .6s ease; }
+.album-progress-label { font-size: 12px; opacity: 0.85; margin-top: 8px; }
+.album-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding-bottom: 8px; }
+.album-card { background: white; border-radius: 6px; box-shadow: 0 4px 18px rgba(61,43,39,0.12), 0 1px 4px rgba(61,43,39,0.06); cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; overflow: hidden; }
+.album-card:nth-child(odd)  { transform: rotate(-0.6deg); }
+.album-card:nth-child(even) { transform: rotate(0.6deg);  }
+.album-card:nth-child(odd):active  { transform: rotate(-0.6deg) scale(.96); }
+.album-card:nth-child(even):active { transform: rotate(0.6deg)  scale(.96); }
+.album-card:hover { box-shadow: 0 8px 28px rgba(61,43,39,0.16); }
+.album-card-media { height: 130px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.album-card-media img { width: 100%; height: 100%; object-fit: cover; }
+.album-card-emoji { font-size: 46px; line-height: 1; }
+.album-card-body { padding: 10px 10px 13px; border-top: 1px solid rgba(0,0,0,0.04); }
+.album-card-name { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 3px; }
+.album-card-meta { font-size: 10px; color: var(--text-muted); }
+.album-card.captured .album-card-name { color: var(--text); }
+.album-card.uncaptured { opacity: 0.72; }
+.album-card.uncaptured .album-card-name { color: var(--text-soft); }
+.album-card-badge { position: absolute; top: 7px; right: 7px; background: rgba(255,255,255,0.9); border-radius: 20px; padding: 2px 7px; font-size: 10px; font-weight: 700; color: var(--text); backdrop-filter: blur(4px); }
+.album-add-card { background: var(--cream-dark); border-radius: 6px; border: 2px dashed var(--primary-light); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all .2s; min-height: 170px; }
+.album-add-card:active { transform: scale(.97); }
+.album-add-icon { font-size: 28px; opacity: 0.5; }
+.album-add-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-align: center; line-height: 1.4; }
+/* Detail sheet */
+.album-detail-media { width: 100%; height: 220px; border-radius: var(--radius-sm); overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+.album-detail-media img { width: 100%; height: 100%; object-fit: cover; }
+.album-detail-emoji { font-size: 72px; line-height: 1; }
+.album-detail-title { font-family: 'Lora', serif; font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.album-detail-date { font-size: 14px; color: var(--text-soft); margin-bottom: 6px; }
+.album-detail-age { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+.album-detail-note { font-size: 14px; color: var(--text); line-height: 1.6; background: var(--cream); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 20px; }
+.album-photo-upload { width: 100%; height: 160px; border-radius: var(--radius-sm); border: 2px dashed var(--primary-light); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: var(--primary-soft); transition: all .2s; position: relative; overflow: hidden; margin-bottom: 4px; }
+.album-photo-upload img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.album-photo-upload-icon { font-size: 36px; opacity: .5; }
+.album-photo-upload-text { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.btn-danger { width: 100%; padding: 13px; border-radius: var(--radius-sm); background: #FFE5E5; color: #C0392B; font-size: 15px; font-weight: 700; cursor: pointer; border: none; margin-top: 10px; }
+
+/* ===== WHATSAPP / EVOLUTION ===== */
+.wa-section { border-radius: var(--radius-sm); overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 8px; }
+.wa-header { background: #25D366; padding: 14px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.wa-header-icon { font-size: 20px; }
+.wa-header-label { font-size: 15px; font-weight: 700; color: white; flex: 1; }
+.wa-status-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+.wa-status-badge.connected    { background: rgba(255,255,255,0.3); color: white; }
+.wa-status-badge.disconnected { background: rgba(0,0,0,0.2);       color: rgba(255,255,255,0.8); }
+.wa-status-badge.unknown      { background: rgba(0,0,0,0.15);       color: rgba(255,255,255,0.7); }
+.wa-body { background: var(--card); padding: 16px; }
+.wa-body .form-control { font-size: 14px; }
+.wa-test-row { display: flex; gap: 8px; margin-top: 4px; }
+.wa-test-row .btn-primary { flex: 1; padding: 11px; font-size: 13px; }
+.btn-wa-test { flex: 1; padding: 11px; border-radius: var(--radius-sm); background: #25D366; color: white; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all .2s; }
+.btn-wa-test:active { transform: scale(.97); }
+.wa-notif-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.wa-notif-row:last-child { border-bottom: none; }
+.wa-notif-label { font-size: 14px; color: var(--text); }
+.wa-notif-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.wa-toggle { width: 44px; height: 24px; border-radius: 12px; background: var(--cream-dark); border: none; cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
+.wa-toggle.on { background: #25D366; }
+.wa-toggle::after { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: white; top: 3px; left: 3px; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.wa-toggle.on::after { transform: translateX(20px); }
+.share-btn { width: 36px; height: 36px; border-radius: 50%; background: #25D366; box-shadow: 0 2px 10px rgba(37,211,102,0.35); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: all .2s; flex-shrink: 0; }
+.share-btn:active { transform: scale(.92); }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeSlideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes scaleIn { from{transform:scale(.8);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes celebrate { 0%{transform:scale(1)} 30%{transform:scale(1.08)} 60%{transform:scale(.97)} 100%{transform:scale(1)} }
+.animate-in { animation: fadeSlideUp .4s ease both; }
+.celebrate { animation: celebrate .4s ease; }
+
+/* ===== UTILITY ===== */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.text-center { text-align: center; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.pill-sleep { background: rgba(123,159,191,0.15); color: var(--sleep-color); }
+.pill-feed { background: rgba(141,193,122,0.15); color: #5A9847; }
+.pill-diaper { background: rgba(196,168,125,0.15); color: #8B6E40; }
+.pill-med { background: rgba(160,123,191,0.15); color: var(--med-color); }
+/* ===== LOGIN SCREEN ===== */
+.login-overlay { position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;overflow-y:auto; }
+.login-logo { font-size:52px;margin-bottom:8px; }
+.login-app-name { font-family:'Lora',serif;font-size:28px;font-weight:700;color:var(--primary);margin-bottom:6px; }
+.login-tagline { font-size:13px;color:var(--text-muted);margin-bottom:36px;text-align:center; }
+.login-card { background:var(--card);border-radius:var(--radius);padding:24px;width:100%;max-width:380px;box-shadow:var(--shadow); }
+.login-title { font-size:18px;font-weight:800;color:var(--text);margin-bottom:20px; }
+.login-err { font-size:13px;color:#C0392B;min-height:18px;margin-top:12px;font-weight:600; }
+.login-switch { text-align:center;margin-top:18px;font-size:13px;color:var(--text-muted); }
+.login-switch span { color:var(--primary);font-weight:700;cursor:pointer;text-decoration:underline; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="screens" id="screens">
+
+    <!-- ONBOARDING -->
+    <div class="screen" id="screen-onboarding">
+      <div class="onboarding-wrap">
+        <div class="onboarding-logo">🌸 bebélog</div>
+        <div class="onboarding-sub">O seu diário de cuidados, feito com amor</div>
+        <div class="onboarding-title">Bem-vinda, mamã!</div>
+        <div class="onboarding-desc">Vamos personalizar a app para o seu bebé. Pode alterar tudo mais tarde nas definições.</div>
+
+        <div class="photo-upload" id="photoUpload" onclick="document.getElementById('photoInput').click()">
+          <span class="photo-upload-icon">📷</span>
+          <span class="photo-upload-text">Foto do bebé</span>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+
+        <div class="form-group">
+          <label class="form-label">Nome do bebé</label>
+          <input type="text" class="form-control" id="ob-baby-name" placeholder="Ex: Maria, João, Ana..." maxlength="30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data de nascimento</label>
+          <input type="date" class="form-control" id="ob-birth-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">O seu nome (mamã)</label>
+          <input type="text" class="form-control" id="ob-mom-name" placeholder="Ex: Ana, Fátima, Graça..." maxlength="30">
+        </div>
+
+        <div class="onboarding-footer">
+          <button class="btn-primary" onclick="completeOnboarding()">Começar a acompanhar 💕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="screen" id="screen-home">
+      <div class="app-header">
+        <div class="header-avatar" id="dash-avatar"></div>
+        <div class="header-info">
+          <div class="header-greeting" id="dash-greeting"></div>
+          <div class="header-name" id="dash-baby-name"></div>
+          <div class="header-age" id="dash-age"></div>
+        </div>
+        <div class="share-btn" id="dash-share-btn" onclick="sendDailySummary()" title="Partilhar via WhatsApp" style="display:none">📤</div>
+        <button class="header-action" onclick="showScreen('settings')">⚙️</button>
+      </div>
+      <div class="screen-content" id="dashboard-content"></div>
+    </div>
+
+    <!-- SLEEP -->
+    <div class="screen" id="screen-sleep">
+      <div class="app-header">
+        <div class="header-avatar" id="sleep-avatar"></div>
+        <div class="header-info">
+          <div class="header-greeting">Sono</div>
+          <div class="header-name" id="sleep-baby-name"></div>
+        </div>
+        <button class="header-action" onclick="openSheet('sleep')">＋</button>
+      </div>
+      <div class="screen-content" id="sleep-content"></div>
+    </div>
+
+    <!-- FEEDING -->
+    <div class="screen" id="screen-feed">
+      <div class="app-header">
+        <div class="header-avatar" id="feed-avatar"></div>
+        <div class="header-info">
+          <div class="header-greeting">Alimentação</div>
+          <div class="header-name" id="feed-baby-name"></div>
+        </div>
+        <button class="header-action" onclick="openSheet('feed')">＋</button>
+      </div>
+      <div class="screen-content" id="feed-content"></div>
+    </div>
+
+    <!-- DIAPERS -->
+    <div class="screen" id="screen-diaper">
+      <div class="app-header">
+        <div class="header-avatar" id="diaper-avatar"></div>
+        <div class="header-info">
+          <div class="header-greeting">Fraldas</div>
+          <div class="header-name" id="diaper-baby-name"></div>
+        </div>
+        <button class="header-action" onclick="openSheet('diaper')">＋</button>
+      </div>
+      <div class="screen-content" id="diaper-content"></div>
+    </div>
+
+    <!-- MEDICATIONS -->
+    <div class="screen" id="screen-med">
+      <div class="app-header">
+        <div class="header-avatar" id="med-avatar"></div>
+        <div class="header-info">
+          <div class="header-greeting">Medicamentos</div>
+          <div class="header-name" id="med-baby-name"></div>
+        </div>
+        <button class="header-action" onclick="openSheet('med')">＋</button>
+      </div>
+      <div class="screen-content" id="med-content"></div>
+    </div>
+
+    <!-- GROWTH -->
+    <div class="screen" id="screen-growth">
+      <div class="app-header">
+        <div class="header-avatar" id="growth-avatar"></div>
+        <div class="header-info">
+          <div class="header-greeting">Crescimento</div>
+          <div class="header-name" id="growth-baby-name"></div>
+        </div>
+        <button class="header-action" onclick="openSheet('growth')">＋</button>
+      </div>
+      <div class="screen-content" id="growth-content"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="screen" id="screen-history">
+      <div class="app-header">
+        <div class="header-avatar" id="history-avatar"></div>
+        <div class="header-info">
+          <div class="header-greeting">Histórico</div>
+          <div class="header-name" id="history-baby-name"></div>
+        </div>
+      </div>
+      <div class="screen-content" id="history-content"></div>
+    </div>
+
+    <!-- ALBUM -->
+    <div class="screen" id="screen-album">
+      <div class="app-header">
+        <div class="header-avatar" id="album-avatar"></div>
+        <div class="header-info">
+          <div class="header-greeting">Primeiras Vezes</div>
+          <div class="header-name" id="album-baby-name"></div>
+        </div>
+        <button class="header-action" onclick="openSheet('milestone-custom')">＋</button>
+      </div>
+      <div class="screen-content" id="album-content"></div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="screen" id="screen-insights">
+      <div class="app-header">
+        <div class="header-avatar" id="insights-avatar"></div>
+        <div class="header-info">
+          <div class="header-greeting">Análise</div>
+          <div class="header-name" id="insights-baby-name"></div>
+        </div>
+      </div>
+      <div class="screen-content" id="insights-content"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="screen" id="screen-settings">
+      <div class="app-header" style="padding-top:20px;">
+        <div style="flex:1">
+          <div class="header-name" style="font-size:22px">Definições</div>
+        </div>
+        <button class="header-action" onclick="showScreen('home')">✕</button>
+      </div>
+      <div class="screen-content" id="settings-content"></div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Início</span>
+    </button>
+    <button class="nav-btn" id="nav-sleep" onclick="showScreen('sleep')">
+      <span class="nav-icon">🌙</span>
+      <span class="nav-label">Sono</span>
+    </button>
+    <button class="nav-btn" id="nav-feed" onclick="showScreen('feed')">
+      <span class="nav-icon">🍼</span>
+      <span class="nav-label">Alim.</span>
+    </button>
+    <button class="nav-btn" id="nav-diaper" onclick="showScreen('diaper')">
+      <span class="nav-icon">🧷</span>
+      <span class="nav-label">Fraldas</span>
+    </button>
+    <button class="nav-btn" id="nav-mais" onclick="toggleMais()">
+      <span class="nav-icon">⋯</span>
+      <span class="nav-label">Mais</span>
+    </button>
+  </nav>
+</div>
+
+<!-- MAIS OVERLAY -->
+<div class="mais-overlay" id="maisOverlay" onclick="closeMais()"></div>
+<div class="mais-menu" id="maisMenu">
+  <div class="mais-handle"></div>
+  <div class="mais-grid">
+    <div class="mais-item featured" id="mais-insights" onclick="showScreen('insights');closeMais()">
+      <span class="mais-item-icon">✨</span>
+      <span class="mais-item-label">Análise do bebé</span>
+    </div>
+    <div class="mais-item featured" id="mais-album" onclick="showScreen('album');closeMais()" style="background:linear-gradient(135deg,#FDE8F5,#F5EDE3);border-color:#F5C4E8">
+      <span class="mais-item-icon">📸</span>
+      <span class="mais-item-label" style="color:#B06090">Álbum de Memórias</span>
+    </div>
+    <div class="mais-item" id="mais-med" onclick="showScreen('med');closeMais()">
+      <span class="mais-item-icon">💊</span>
+      <span class="mais-item-label">Medicamentos</span>
+    </div>
+    <div class="mais-item" id="mais-growth" onclick="showScreen('growth');closeMais()">
+      <span class="mais-item-icon">📏</span>
+      <span class="mais-item-label">Crescimento</span>
+    </div>
+    <div class="mais-item" id="mais-history" onclick="showScreen('history');closeMais()">
+      <span class="mais-item-icon">📅</span>
+      <span class="mais-item-label">Histórico</span>
+    </div>
+    <div class="mais-item" id="mais-settings" onclick="showScreen('settings');closeMais()">
+      <span class="mais-item-icon">⚙️</span>
+      <span class="mais-item-label">Definições</span>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET OVERLAY -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="mainSheet">
+  <div class="sheet-handle"></div>
+  <div id="sheetContent"></div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-overlay" style="display:none">
+  <div class="login-logo">🌸</div>
+  <div class="login-app-name">bebélog</div>
+  <div class="login-tagline">O diário do seu bebé, sempre consigo</div>
+
+  <!-- LOGIN FORM -->
+  <div class="login-card" id="login-form">
+    <div class="login-title">Bem-vinda de volta 👋</div>
+    <div class="form-group">
+      <label class="form-label">Número de telefone</label>
+      <input type="tel" class="form-control" id="login-phone" placeholder="841234567" autocomplete="tel"
+             style="letter-spacing:.5px">
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Número moçambicano — o código 258 é adicionado automaticamente</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Senha</label>
+      <input type="password" class="form-control" id="login-pass" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')submitLogin()">
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <button class="btn-primary" id="login-btn" onclick="submitLogin()" style="margin-top:4px;width:100%">Entrar</button>
+    <div class="login-switch">Ainda não tem conta? <span onclick="toggleLoginMode(true)">Registar</span></div>
+  </div>
+
+  <!-- REGISTER FORM -->
+  <div class="login-card" id="register-form" style="display:none">
+    <div class="login-title">Criar conta 🌱</div>
+    <div class="form-group">
+      <label class="form-label">Número de telefone</label>
+      <input type="tel" class="form-control" id="reg-phone" placeholder="841234567" autocomplete="tel"
+             style="letter-spacing:.5px">
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Número moçambicano — o código 258 é adicionado automaticamente</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Senha</label>
+      <input type="password" class="form-control" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"
+             onkeydown="if(event.key==='Enter')submitRegister()">
+    </div>
+    <div class="login-err" id="reg-err"></div>
+    <button class="btn-primary" id="reg-btn" onclick="submitRegister()" style="margin-top:4px;width:100%">Criar conta</button>
+    <div class="login-switch">Já tem conta? <span onclick="toggleLoginMode(false)">Entrar</span></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-check">✓</div>
+  <span id="toastMsg">Registo guardado!</span>
+</div>
+
+<script src="config.js"></script>
+<script>
+// ===== STATE =====
+const S = {
+  profile: null,
+  settings: null,
+  currentScreen: null,
+  historyDate: new Date().toDateString(),
+  sleepTimer: null,
+  sleepStart: null,
+  dashInterval: null,
+  fabOpen: false,
+  maisOpen: false,
+  sheetOpen: null,
+  growthTab: 'weight',
+  insightsPeriod: 'today',
+  _milestoneTarget: null,
+  albumTab: 'memories',
+  _editLogId: null,
+};
+
+// ===== STORAGE =====
+// ===== API LAYER =====
+const API = {
+  _h() {
+    const token = localStorage.getItem('bebe_token') || '';
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+  },
+  async _fetch(method, path, data) {
+    const opts = { method, headers: this._h() };
+    if (data !== undefined) opts.body = JSON.stringify(data);
+    const r = await fetch((window.CONFIG?.apiUrl || '/api') + path, opts);
+    if (r.status === 401) { showLoginScreen(); return null; }
+    return r;
+  },
+  async get(path)           { return (await this._fetch('GET',    path))?.json(); },
+  async post(path, data)    { return (await this._fetch('POST',   path, data))?.json(); },
+  async put(path, data)     { return (await this._fetch('PUT',    path, data))?.json(); },
+  async del(path)           { return (await this._fetch('DELETE', path))?.json(); },
+};
+
+// ===== DB (cache-first, write-through to API) =====
+const DB = {
+  get: k => { try { return JSON.parse(localStorage.getItem('bebe_'+k) || 'null'); } catch { return null; } },
+  set: (k, v) => localStorage.setItem('bebe_'+k, JSON.stringify(v)),
+
+  profile:    () => DB.get('profile'),
+  setProfile: p  => {
+    DB.set('profile', p);
+    API.post('/profile.php', p).catch(e => console.warn('profile sync', e));
+  },
+
+  logs:      () => DB.get('logs') || [],
+  addLog:    entry => {
+    const logs = DB.logs(); logs.push(entry); DB.set('logs', logs);
+    API.post('/logs.php', entry).catch(e => console.warn('addLog', e));
+  },
+  delLog:    id => {
+    DB.set('logs', DB.logs().filter(l => l.id !== id));
+    API.del(`/logs.php?id=${encodeURIComponent(id)}`).catch(e => console.warn('delLog', e));
+  },
+  updateLog: (id, changes) => {
+    DB.set('logs', DB.logs().map(l => l.id === id ? {...l, ...changes} : l));
+    API.put(`/logs.php?id=${encodeURIComponent(id)}`, changes).catch(e => console.warn('updateLog', e));
+  },
+
+  meds:   () => DB.get('meds') || [],
+  addMed: m => {
+    const meds = DB.meds(); meds.push(m); DB.set('meds', meds);
+    API.post('/meds.php', m).catch(e => console.warn('addMed', e));
+  },
+  delMed: id => {
+    DB.set('meds', DB.meds().filter(m => m.id !== id));
+    API.del(`/meds.php?id=${encodeURIComponent(id)}`).catch(e => console.warn('delMed', e));
+  },
+
+  medLogs:   () => DB.get('medlogs') || [],
+  addMedLog: l => {
+    const ml = DB.medLogs(); ml.push(l); DB.set('medlogs', ml);
+    API.post('/med_logs.php', l).catch(e => console.warn('addMedLog', e));
+  },
+};
+
+// ===== UTILS =====
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function todayStr() { return new Date().toDateString(); }
+function fmtTime(d) {
+  return new Date(d).toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit' });
+}
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long' });
+}
+function fmtDuration(ms) {
+  const m = Math.round(ms/60000);
+  if (m < 60) return m + 'min';
+  const h = Math.floor(m/60), rm = m%60;
+  return h + 'h' + (rm ? rm + 'min' : '');
+}
+function getBabyAge(birthDate) {
+  const now = new Date(), birth = new Date(birthDate);
+  const days = Math.floor((now - birth) / 86400000);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30.44);
+  if (months < 3) return `${weeks} semana${weeks!==1?'s':''} e ${days%7} dia${days%7!==1?'s':''}`;
+  if (months < 24) return `${months} mes${months!==1?'es':''}`;
+  const yrs = Math.floor(months/12);
+  return `${yrs} ano${yrs!==1?'s':''}`;
+}
+function getBabyAgeMonths(birthDate) {
+  return Math.floor((new Date() - new Date(birthDate)) / (30.44 * 86400000));
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg || 'Registo guardado!';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function setThemeColor(hex) {
+  document.documentElement.style.setProperty('--primary', hex);
+  // Generate lighter/darker variants
+  document.documentElement.style.setProperty('--primary-dark', adjustColor(hex, -30));
+  document.documentElement.style.setProperty('--primary-light', adjustColor(hex, 40));
+  document.documentElement.style.setProperty('--primary-soft', adjustColor(hex, 70));
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', hex);
+}
+function adjustColor(hex, amount) {
+  const clamp = v => Math.max(0, Math.min(255, v));
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const nr = clamp(r + amount), ng = clamp(g + amount + Math.floor(amount*0.3)), nb = clamp(b + amount + Math.floor(amount*0.6));
+  return '#' + [nr,ng,nb].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+
+// ===== NAV =====
+const NAV_SCREENS = ['home','sleep','feed','diaper'];
+function showScreen(name) {
+  const prev = S.currentScreen;
+  if (prev === name) return;
+  const prevEl = document.getElementById('screen-'+prev);
+  const nextEl = document.getElementById('screen-'+name);
+  if (!nextEl) return;
+  if (prev === 'home') { clearInterval(S.dashInterval); S.dashInterval = null; }
+  if (prevEl) { prevEl.classList.remove('active'); prevEl.classList.add('slide-out'); setTimeout(() => prevEl.classList.remove('slide-out'), 350); }
+  nextEl.classList.add('active');
+  S.currentScreen = name;
+  // Nav highlight
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const navId = 'nav-' + (NAV_SCREENS.includes(name) ? name : 'mais');
+  const nb = document.getElementById(navId);
+  if (nb) nb.classList.add('active');
+  // Show/hide nav
+  const noNav = ['onboarding','settings'];
+  document.getElementById('bottom-nav').style.display = noNav.includes(name) ? 'none' : 'flex';
+  // Render
+  renderScreen(name);
+}
+function renderScreen(name) {
+  switch(name) {
+    case 'home': renderDashboard(); break;
+    case 'sleep': renderSleep(); break;
+    case 'feed': renderFeed(); break;
+    case 'diaper': renderDiaper(); break;
+    case 'med': renderMed(); break;
+    case 'growth': renderGrowth(); break;
+    case 'history': renderHistory(); break;
+    case 'settings': renderSettings(); break;
+    case 'insights': renderInsights(); break;
+    case 'album':    S.albumTab = 'memories'; renderAlbum(); break;
+  }
+}
+function toggleMais() {
+  S.maisOpen ? closeMais() : openMais();
+}
+function openMais() {
+  S.maisOpen = true;
+  document.getElementById('maisOverlay').classList.add('open');
+  document.getElementById('maisMenu').classList.add('open');
+  document.getElementById('nav-mais').classList.add('active');
+}
+function closeMais() {
+  S.maisOpen = false;
+  document.getElementById('maisOverlay').classList.remove('open');
+  document.getElementById('maisMenu').classList.remove('open');
+}
+
+// ===== SHEET =====
+function openSheet(type) {
+  S.sheetOpen = type;
+  document.getElementById('sheetOverlay').classList.add('open');
+  document.getElementById('mainSheet').classList.add('open');
+  document.getElementById('sheetContent').innerHTML = buildSheetContent(type);
+}
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('open');
+  document.getElementById('mainSheet').classList.remove('open');
+  S.sheetOpen = null;
+}
+function buildSheetContent(type) {
+  switch(type) {
+    case 'sleep': return buildSleepSheet();
+    case 'feed': return buildFeedSheet();
+    case 'diaper': return buildDiaperSheet();
+    case 'med': return buildMedSheet();
+    case 'growth': return buildGrowthSheet();
+    case 'milestone-add':    return buildMilestoneAddSheet(S._milestoneTarget);
+    case 'milestone-custom': return buildMilestoneAddSheet(null);
+    case 'milestone-view':   return buildMilestoneViewSheet(S._milestoneTarget);
+    case 'edit-log': return buildEditLogSheet();
+    default: return '';
+  }
+}
+
+// ===== ONBOARDING =====
+function handlePhotoUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const pu = document.getElementById('photoUpload');
+    pu.innerHTML = `<img src="${ev.target.result}" alt="bebé">`;
+    pu.dataset.photo = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function completeOnboarding() {
+  const name = document.getElementById('ob-baby-name').value.trim();
+  const birth = document.getElementById('ob-birth-date').value;
+  const mom = document.getElementById('ob-mom-name').value.trim();
+  if (!name) { alert('Por favor insira o nome do bebé'); return; }
+  if (!birth) { alert('Por favor insira a data de nascimento'); return; }
+  const photo = document.getElementById('photoUpload').dataset.photo || '';
+  const profile = { name, birth, mom, photo, themeColor: '#E8968A', createdAt: Date.now() };
+  DB.setProfile(profile);
+  S.profile = profile;
+
+  // Auto-register the phone used to sign up as first notification number
+  const regPhone = localStorage.getItem('bebe_phone');
+  if (regPhone) {
+    const wa = DB.waConfig();
+    if (!(wa.phones || []).includes(regPhone)) {
+      wa.phones = [regPhone, ...(wa.phones || [])];
+      DB.setWaConfig(wa);
+    }
+  }
+
+  // Send welcome notification on new accounts
+  if (localStorage.getItem('bebe_new_account')) {
+    localStorage.removeItem('bebe_new_account');
+    sendWelcomeNotification();
+  }
+
+  document.getElementById('bottom-nav').style.display = '';
+  showScreen('home');
+}
+
+// ===== AVATARS =====
+function renderAvatars() {
+  const p = S.profile; if (!p) return;
+  const ids = ['dash','sleep','feed','diaper','med','growth','history','insights','album'];
+  ids.forEach(id => {
+    const el = document.getElementById(id+'-avatar');
+    if (!el) return;
+    if (p.photo) {
+      el.innerHTML = `<img src="${p.photo}" alt="${p.name}">`;
+    } else {
+      el.textContent = p.name.charAt(0).toUpperCase();
+      el.style.background = 'var(--primary)';
+      el.style.color = 'white';
+      el.style.fontSize = '16px';
+      el.style.fontWeight = '700';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+    }
+  });
+  const ids2 = ['sleep','feed','diaper','med','growth','history','insights','album'];
+  ids2.forEach(id => {
+    const el = document.getElementById(id+'-baby-name');
+    if (el) el.textContent = p.name;
+  });
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const p = S.profile; if (!p) return;
+  renderAvatars();
+  document.getElementById('dash-greeting').textContent = `Olá, mamã da ${p.name}! 👶`;
+  document.getElementById('dash-baby-name').textContent = p.name;
+  document.getElementById('dash-age').textContent = getBabyAge(p.birth);
+  const logs = DB.logs();
+  const today = logs.filter(l => l.date === todayStr());
+  const sleeps = today.filter(l => l.type === 'sleep');
+  const feeds = today.filter(l => l.type === 'feed');
+  const diapers = today.filter(l => l.type === 'diaper');
+  const totalSleepMs = sleeps.reduce((a,l) => a + (l.duration||0), 0);
+  const totalSleepHrs = (totalSleepMs/3600000).toFixed(1);
+  const lastFeed = feeds.length ? feeds[feeds.length-1] : null;
+  const lastFeedAgo = lastFeed ? fmtDuration(Date.now() - lastFeed.time) : null;
+  const lastSleep = sleeps.length ? sleeps[sleeps.length-1] : null;
+  const pred = predictNextSleep(logs, p.birth);
+  const isSleeping = S.sleepStart !== null;
+  const sleepingFor = isSleeping ? fmtDuration(Date.now() - S.sleepStart) : null;
+  let html = `
+    <div class="hero-card animate-in">
+      <div class="hero-greeting">Olá, mamã da ${p.name}! 👶</div>
+      <div class="hero-name">${p.name}</div>
+      <div class="hero-age">${getBabyAge(p.birth)}</div>
+      ${isSleeping ? `
+        <div class="sleep-status" id="dash-sleep-pill">
+          <div class="sleep-dot"></div>
+          😴 A dormir há <span id="dash-sleep-dur">${sleepingFor}</span>
+        </div>
+        <div class="hero-actions">
+          <button class="hero-btn stop" onclick="dashStopSleep()">☀️ Acordou!</button>
+          <button class="hero-btn" onclick="showScreen('sleep')">Ver sono ›</button>
+        </div>` : `
+        <div class="hero-actions">
+          <button class="hero-btn" onclick="dashStartSleep()">🌙 Adormecer agora</button>
+        </div>`}
+    </div>
+    <div class="quick-stats animate-in" style="animation-delay:.05s">
+      <div class="stat-card" onclick="showScreen('sleep')">
+        <span class="stat-icon">🌙</span>
+        <span class="stat-label">Sono hoje</span>
+        <span class="stat-value">${totalSleepHrs}h</span>
+        <span class="stat-sub">${sleeps.length} período${sleeps.length!==1?'s':''}</span>
+      </div>
+      <div class="stat-card" onclick="showScreen('feed')">
+        <span class="stat-icon">🍼</span>
+        <span class="stat-label">Última refeição</span>
+        <span class="stat-value">${lastFeedAgo ? lastFeedAgo : '—'}</span>
+        <span class="stat-sub">${feeds.length} refeição${feeds.length!==1?'ões':''}</span>
+      </div>
+      <div class="stat-card" onclick="showScreen('diaper')">
+        <span class="stat-icon">🧷</span>
+        <span class="stat-label">Fraldas hoje</span>
+        <span class="stat-value">${diapers.length}</span>
+        <span class="stat-sub">fraldas</span>
+      </div>
+      <div class="stat-card" onclick="openSheet('feed')">
+        <span class="stat-icon">⏰</span>
+        <span class="stat-label">Próx. refeição</span>
+        <span class="stat-value">${lastFeed ? fmtTime(lastFeed.time + 2.5*3600000) : '—'}</span>
+        <span class="stat-sub">estimativa</span>
+      </div>
+    </div>`;
+
+  if (pred) {
+    const cls = pred.zone === 'green' ? 'green' : pred.zone === 'yellow' ? 'yellow' : 'red';
+    const emoji = pred.zone === 'green' ? '😴' : pred.zone === 'yellow' ? '😪' : '😫';
+    html += `
+    <div class="sleep-prediction animate-in" style="animation-delay:.1s">
+      <div class="section-title">Próxima Sesta Prevista</div>
+      <div class="prediction-row">
+        <div class="prediction-indicator ${cls}">${emoji}</div>
+        <div>
+          <div class="prediction-label">Hora ideal para dormir</div>
+          <div class="prediction-time">~${pred.time}</div>
+          <div class="prediction-confidence">${pred.confidence}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="sleep-prediction animate-in" style="animation-delay:.13s;cursor:pointer;background:linear-gradient(135deg,var(--primary-soft),var(--cream-dark))" onclick="showScreen('insights')">
+    <div class="prediction-row">
+      <div class="prediction-indicator green" style="background:rgba(93,191,122,0.15)">✨</div>
+      <div>
+        <div class="prediction-label">Análise do bebé</div>
+        <div class="prediction-time" style="font-size:16px">Ver insights e desenvolvimento</div>
+        <div class="prediction-confidence">Sono · Alimentação · Fraldas · Marcos</div>
+      </div>
+      <div style="color:var(--text-muted);font-size:18px;margin-left:auto">›</div>
+    </div>
+  </div>`;
+  html += `<div class="section-title animate-in" style="animation-delay:.17s">Hoje <span class="section-title-action" onclick="showScreen('history')">Ver tudo →</span></div>`;
+  const recentLogs = today.slice(-5).reverse();
+  if (recentLogs.length === 0) {
+    html += `<div class="empty-state"><div class="empty-state-icon">🌸</div><div class="empty-state-text">Sem registos para hoje</div><div class="empty-state-sub">Comece a registar o sono, alimentação e fraldas da ${p.name}</div></div>`;
+  } else {
+    html += `<div class="log-list">` + recentLogs.map(l => logItemHtml(l)).join('') + `</div>`;
+  }
+  document.getElementById('dashboard-content').innerHTML = html;
+
+  // Live duration ticker — updates the pill every 30s without full re-render
+  clearInterval(S.dashInterval);
+  if (isSleeping) {
+    S.dashInterval = setInterval(() => {
+      const el = document.getElementById('dash-sleep-dur');
+      if (!el) { clearInterval(S.dashInterval); return; }
+      el.textContent = fmtDuration(Date.now() - S.sleepStart);
+    }, 30000);
+  }
+}
+
+function dashStartSleep() {
+  startSleepTimer();
+  renderDashboard();
+}
+function dashStopSleep() {
+  stopSleepTimer();
+  clearInterval(S.dashInterval);
+  renderDashboard();
+}
+
+// ===== SLEEP PREDICTION =====
+function predictNextSleep(logs, birthDate) {
+  const ageMonths = getBabyAgeMonths(birthDate);
+  const sleepLogs = logs.filter(l => l.type === 'sleep' && l.end);
+  // Get last wake time
+  const lastSleep = sleepLogs.length ? sleepLogs[sleepLogs.length-1] : null;
+  if (!lastSleep) {
+    // Use age-based default
+    const wakeWindow = ageMonths < 3 ? 60 : ageMonths < 6 ? 120 : 180; // minutes
+    const next = new Date(Date.now() + wakeWindow * 60000);
+    return { time: fmtTime(next), zone: 'yellow', confidence: 'Baseado na idade (' + getBabyAge(birthDate) + ')' };
+  }
+  const lastWake = lastSleep.end;
+  const now = Date.now();
+  const awakeMin = (now - lastWake) / 60000;
+
+  // Average wake window from last 7 days
+  const week = logs.filter(l => l.type === 'sleep' && l.end && l.end > now - 7*86400000);
+  let avgWindow = ageMonths < 3 ? 75 : ageMonths < 6 ? 150 : 200;
+  if (week.length >= 2) {
+    const windows = [];
+    for (let i = 1; i < week.length; i++) {
+      const w = (week[i].time - week[i-1].end) / 60000;
+      if (w > 20 && w < 300) windows.push(w);
+    }
+    if (windows.length) avgWindow = windows.reduce((a,b)=>a+b,0)/windows.length;
+  }
+
+  const remainMin = avgWindow - awakeMin;
+  const nextSleepTime = new Date(lastWake + avgWindow * 60000);
+  let zone = 'green', confidence;
+  if (awakeMin < avgWindow * 0.6) { zone = 'green'; confidence = 'Boa janela de sono'; }
+  else if (awakeMin < avgWindow * 0.9) { zone = 'yellow'; confidence = 'A ficar cansada...'; }
+  else { zone = 'red'; confidence = 'Possivelmente cansada demais!'; }
+  return { time: fmtTime(nextSleepTime), zone, confidence };
+}
+
+// ===== LOG ITEM HTML =====
+function logItemHtml(l, showDelete = false) {
+  const icons = { sleep: '🌙', feed: '🍼', diaper: '🧷', med: '💊', growth: '📏' };
+  const classes = { sleep: 'sleep', feed: 'feed', diaper: 'diaper', med: 'med', growth: 'med' };
+  const titles = { sleep: 'Sono', feed: 'Alimentação', diaper: 'Fralda', med: 'Medicamento', growth: 'Crescimento' };
+  let sub = '';
+  if (l.type === 'sleep') sub = l.duration ? fmtDuration(l.duration) : (l.end ? '' : 'A dormir...');
+  if (l.type === 'feed') sub = l.feedType === 'breast' ? `Mama ${l.side||''}` : l.feedType === 'formula' ? `Biberão ${l.amount||''}ml` : 'Papinha';
+  if (l.type === 'diaper') sub = l.diaperType === 'wet' ? 'Molhada' : l.diaperType === 'dirty' ? 'Suja' : 'Molhada e Suja';
+  if (l.type === 'med') sub = `${l.medName||''} ${l.dose||''}`;
+  if (l.type === 'growth') sub = l.growthType === 'weight' ? `Peso: ${l.value}kg` : `Altura: ${l.value}cm`;
+  return `<div class="log-item" id="log-${l.id}">
+    <div class="log-item-icon ${classes[l.type]}">${icons[l.type]}</div>
+    <div class="log-item-body">
+      <div class="log-item-title">${titles[l.type]}</div>
+      <div class="log-item-sub">${sub}${l.notes ? ' · ' + l.notes : ''}</div>
+    </div>
+    <div class="log-item-time">${fmtTime(l.time)}</div>
+    <div class="log-item-edit" onclick="editLog('${l.id}')">✏️</div>
+    <div class="log-item-delete" onclick="deleteLog('${l.id}')">🗑</div>
+  </div>`;
+}
+function editLog(id) {
+  S._editLogId = id;
+  openSheet('edit-log');
+}
+function deleteLog(id) {
+  DB.delLog(id);
+  const el = document.getElementById('log-'+id);
+  if (el) { el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='all .3s'; setTimeout(()=>{el.remove();renderScreen(S.currentScreen);},300); }
+}
+
+// ===== SLEEP SCREEN =====
+function renderSleep() {
+  const p = S.profile; if (!p) return;
+  renderAvatars();
+  const logs = DB.logs().filter(l => l.type === 'sleep');
+  const today = logs.filter(l => l.date === todayStr());
+  const isSleeping = S.sleepStart !== null;
+
+  let html = `
+    <div class="timer-card animate-in">
+      ${isSleeping ? `
+        <div class="timer-display" id="sleep-timer-display">00:00</div>
+        <div class="timer-label">A dormir desde ${fmtTime(S.sleepStart)} <span class="sleep-adjust-link" onclick="adjustSleepStart()">ajustar</span></div>
+        <button class="timer-btn" onclick="stopSleepTimer()">☀️ Acordou!</button>
+      ` : `
+        <div class="timer-display">😴</div>
+        <div class="timer-label">${p.name} não está a dormir</div>
+        <button class="timer-btn" onclick="startSleepTimer()">🌙 Adormeceu Agora</button>
+        <div class="sleep-time-adjust">
+          <label for="sleep-start-input">Adormeceu às</label>
+          <input type="time" id="sleep-start-input" value="${toTimeStr(Date.now())}">
+        </div>
+      `}
+    </div>`;
+
+  // 7-day chart
+  html += buildSleepChart(logs);
+
+  html += `<div class="section-title">Sono de hoje</div>`;
+  if (today.length === 0) {
+    html += `<div class="empty-state"><div class="empty-state-icon">🌙</div><div class="empty-state-text">Sem sono registado hoje</div><div class="empty-state-sub">Carregue no botão acima quando a ${p.name} adormecer</div></div>`;
+  } else {
+    html += `<div class="log-list">` + today.slice().reverse().map(l => logItemHtml(l, true)).join('') + `</div>`;
+  }
+  document.getElementById('sleep-content').innerHTML = html;
+  if (isSleeping) startTimerDisplay();
+}
+function buildSleepChart(logs) {
+  const days = [];
+  for (let i=6; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.toDateString();
+    const dayLogs = logs.filter(l => l.date === ds);
+    const totalMs = dayLogs.reduce((a,l) => a+(l.duration||0), 0);
+    const dayNames = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    days.push({ label: dayNames[d.getDay()], hours: totalMs/3600000, isToday: i===0 });
+  }
+  const maxH = Math.max(...days.map(d=>d.hours), 1);
+  const W = 280, H = 56, barW = 28, gap = (W - days.length*barW)/(days.length+1);
+  let bars = '', labels = '';
+  days.forEach((d, i) => {
+    const x = gap + i*(barW+gap);
+    const bh = Math.max((d.hours/maxH)*H*0.88, d.hours>0 ? 3 : 0);
+    const y = H - bh;
+    const opacity = d.isToday ? '1' : '0.4';
+    bars += `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${Math.max(bh,2).toFixed(1)}" rx="5" fill="var(--sleep-color)" opacity="${opacity}"/>`;
+    labels += `<text class="chart-day-label" x="${(x+barW/2).toFixed(1)}" y="${H+11}" text-anchor="middle" font-size="10">${d.label}</text>`;
+    if (d.hours > 0) labels += `<text class="chart-day-label" x="${(x+barW/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="9" style="fill:var(--text-soft)">${d.hours.toFixed(1)}h</text>`;
+  });
+  return `<div class="chart-container animate-in" style="animation-delay:.05s">
+    <div class="chart-title">Sono nos últimos 7 dias</div>
+    <svg class="chart-svg" viewBox="0 0 280 70" preserveAspectRatio="none" style="height:88px;display:block">${bars}${labels}</svg>
+  </div>`;
+}
+function startSleepTimer() {
+  const input = document.getElementById('sleep-start-input');
+  if (input && input.value) {
+    const now = new Date();
+    const [h, m] = input.value.split(':').map(Number);
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+    S.sleepStart = d.getTime() > Date.now() ? Date.now() : d.getTime();
+  } else {
+    S.sleepStart = Date.now();
+  }
+  DB.set('sleepStart', S.sleepStart);
+  if (S.sleepTimer) clearInterval(S.sleepTimer);
+  renderSleep();
+}
+function stopSleepTimer() {
+  if (!S.sleepStart) return;
+  const end = Date.now();
+  const duration = end - S.sleepStart;
+  const log = { id: uid(), type: 'sleep', time: S.sleepStart, end, duration, date: new Date(S.sleepStart).toDateString() };
+  DB.addLog(log);
+  S.sleepStart = null;
+  DB.set('sleepStart', null);
+  if (S.sleepTimer) clearInterval(S.sleepTimer);
+  S.sleepTimer = null;
+  showToast(`Sono registado: ${fmtDuration(duration)} 🌙`);
+  renderSleep();
+}
+function adjustSleepStart() {
+  const current = toTimeStr(S.sleepStart);
+  const val = prompt(`Adormeceu às (hh:mm):`, current);
+  if (!val) return;
+  const [h, m] = val.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return;
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+  const newStart = d.getTime() > Date.now() ? Date.now() : d.getTime();
+  S.sleepStart = newStart;
+  DB.set('sleepStart', newStart);
+  renderSleep();
+}
+function startTimerDisplay() {
+  if (S.sleepTimer) clearInterval(S.sleepTimer);
+  S.sleepTimer = setInterval(() => {
+    const el = document.getElementById('sleep-timer-display');
+    if (!el) { clearInterval(S.sleepTimer); return; }
+    const ms = Date.now() - S.sleepStart;
+    const m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000);
+    el.textContent = String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }, 1000);
+}
+
+// ===== SLEEP SHEET =====
+function toTimeStr(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function buildEditLogSheet() {
+  const l = DB.logs().find(x => x.id === S._editLogId);
+  if (!l) return '<div class="sheet-title">Registo não encontrado</div>';
+  const icons = { sleep: '🌙', feed: '🍼', diaper: '🧷', med: '💊', growth: '📏' };
+  const titles = { sleep: 'Editar Sono', feed: 'Editar Refeição', diaper: 'Editar Fralda', med: 'Editar Medicamento', growth: 'Editar Medição' };
+
+  let fields = '';
+  if (l.type === 'sleep') {
+    fields = `
+    <div class="form-group">
+      <label class="form-label">Início do sono</label>
+      <input type="time" class="form-control" id="e-start" value="${toTimeStr(l.time)}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fim do sono</label>
+      <input type="time" class="form-control" id="e-end" value="${toTimeStr(l.end)}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Qualidade</label>
+      <div class="toggle-group" id="e-quality">
+        <button class="toggle-btn ${(!l.quality||l.quality==='boa')?'active':''}" data-v="boa" onclick="toggleSelect(this,'e-quality')">😴 Boa</button>
+        <button class="toggle-btn ${l.quality==='media'?'active':''}" data-v="media" onclick="toggleSelect(this,'e-quality')">😪 Média</button>
+        <button class="toggle-btn ${l.quality==='ma'?'active':''}" data-v="ma" onclick="toggleSelect(this,'e-quality')">😣 Má</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <textarea class="form-control" id="e-notes">${l.notes||''}</textarea>
+    </div>`;
+  } else if (l.type === 'feed') {
+    fields = `
+    <div class="form-group">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" id="e-time" value="${toTimeStr(l.time)}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo de refeição</label>
+      <div class="toggle-group" id="e-ftype">
+        <button class="toggle-btn ${l.feedType==='breast'?'active':''}" data-v="breast" onclick="toggleSelect(this,'e-ftype');showEditFeedFields()">🤱 Mama</button>
+        <button class="toggle-btn ${l.feedType==='formula'?'active':''}" data-v="formula" onclick="toggleSelect(this,'e-ftype');showEditFeedFields()">🍼 Biberão</button>
+        <button class="toggle-btn ${l.feedType==='solids'?'active':''}" data-v="solids" onclick="toggleSelect(this,'e-ftype');showEditFeedFields()">🥣 Papinha</button>
+      </div>
+    </div>
+    <div id="e-breast-group" style="display:${l.feedType==='breast'?'block':'none'}">
+      <div class="form-group">
+        <label class="form-label">Lado</label>
+        <div class="toggle-group" id="e-side">
+          <button class="toggle-btn ${l.side==='esquerdo'?'active':''}" data-v="esquerdo" onclick="toggleSelect(this,'e-side')">◉ Esquerdo</button>
+          <button class="toggle-btn ${l.side==='direito'?'active':''}" data-v="direito" onclick="toggleSelect(this,'e-side')">◉ Direito</button>
+          <button class="toggle-btn ${l.side==='ambos'?'active':''}" data-v="ambos" onclick="toggleSelect(this,'e-side')">◉ Ambos</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duração (minutos)</label>
+        <input type="number" class="form-control" id="e-fduration" value="${l.duration||''}" min="1" max="60">
+      </div>
+    </div>
+    <div id="e-formula-group" style="display:${l.feedType==='formula'?'block':'none'}">
+      <div class="form-group">
+        <label class="form-label">Quantidade (ml)</label>
+        <input type="number" class="form-control" id="e-amount" value="${l.amount||''}" min="10" max="500">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <textarea class="form-control" id="e-notes">${l.notes||''}</textarea>
+    </div>`;
+  } else if (l.type === 'diaper') {
+    fields = `
+    <div class="form-group">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" id="e-time" value="${toTimeStr(l.time)}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo</label>
+      <div class="toggle-group" id="e-dtype">
+        <button class="toggle-btn ${l.diaperType==='wet'?'active':''}" data-v="wet" onclick="toggleSelect(this,'e-dtype')">💧 Molhada</button>
+        <button class="toggle-btn ${l.diaperType==='dirty'?'active':''}" data-v="dirty" onclick="toggleSelect(this,'e-dtype')">💩 Suja</button>
+        <button class="toggle-btn ${l.diaperType==='both'?'active':''}" data-v="both" onclick="toggleSelect(this,'e-dtype')">🧷 As duas</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <textarea class="form-control" id="e-notes">${l.notes||''}</textarea>
+    </div>`;
+  } else if (l.type === 'growth') {
+    const dateVal = new Date(l.time).toISOString().slice(0,10);
+    fields = `
+    <div class="form-group">
+      <label class="form-label">Tipo</label>
+      <div class="toggle-group" id="e-gtype">
+        <button class="toggle-btn ${l.growthType==='weight'?'active':''}" data-v="weight" onclick="toggleSelect(this,'e-gtype')">⚖️ Peso (kg)</button>
+        <button class="toggle-btn ${l.growthType==='height'?'active':''}" data-v="height" onclick="toggleSelect(this,'e-gtype')">📏 Altura (cm)</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Valor</label>
+      <input type="number" class="form-control" id="e-gvalue" value="${l.value||''}" step="0.01" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Data</label>
+      <input type="date" class="form-control" id="e-gdate" value="${dateVal}">
+    </div>`;
+  } else if (l.type === 'med') {
+    fields = `
+    <div class="form-group">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" id="e-time" value="${toTimeStr(l.time)}">
+    </div>`;
+  }
+
+  return `<div class="sheet-title">${icons[l.type]} ${titles[l.type]}</div>
+  ${fields}
+  <button class="btn-primary" onclick="saveEditLog()">Guardar alterações ✓</button>`;
+}
+function showEditFeedFields() {
+  const type = document.querySelector('#e-ftype .toggle-btn.active')?.dataset.v;
+  document.getElementById('e-breast-group').style.display = type === 'breast' ? 'block' : 'none';
+  document.getElementById('e-formula-group').style.display = type === 'formula' ? 'block' : 'none';
+}
+function saveEditLog() {
+  const l = DB.logs().find(x => x.id === S._editLogId);
+  if (!l) return;
+  const logDate = new Date(l.time);
+  const dateBase = `${logDate.getFullYear()}-${String(logDate.getMonth()+1).padStart(2,'0')}-${String(logDate.getDate()).padStart(2,'0')}`;
+  const changes = {};
+
+  if (l.type === 'sleep') {
+    const startVal = document.getElementById('e-start').value;
+    const endVal = document.getElementById('e-end').value;
+    if (!startVal) { alert('Insira a hora de início'); return; }
+    const startTs = new Date(`${dateBase}T${startVal}`).getTime();
+    const endTs = endVal ? new Date(`${dateBase}T${endVal}`).getTime() : null;
+    changes.time = startTs;
+    changes.end = endTs;
+    changes.duration = endTs ? endTs - startTs : null;
+    changes.quality = document.querySelector('#e-quality .toggle-btn.active')?.dataset.v;
+    changes.notes = document.getElementById('e-notes').value.trim();
+  } else if (l.type === 'feed') {
+    const timeVal = document.getElementById('e-time').value;
+    if (!timeVal) { alert('Insira a hora'); return; }
+    changes.time = new Date(`${dateBase}T${timeVal}`).getTime();
+    changes.feedType = document.querySelector('#e-ftype .toggle-btn.active')?.dataset.v || l.feedType;
+    changes.side = document.querySelector('#e-side .toggle-btn.active')?.dataset.v;
+    const dur = document.getElementById('e-fduration')?.value;
+    changes.duration = dur ? +dur : null;
+    const amt = document.getElementById('e-amount')?.value;
+    changes.amount = amt ? +amt : null;
+    changes.notes = document.getElementById('e-notes').value.trim();
+  } else if (l.type === 'diaper') {
+    const timeVal = document.getElementById('e-time').value;
+    if (!timeVal) { alert('Insira a hora'); return; }
+    changes.time = new Date(`${dateBase}T${timeVal}`).getTime();
+    changes.diaperType = document.querySelector('#e-dtype .toggle-btn.active')?.dataset.v || l.diaperType;
+    changes.notes = document.getElementById('e-notes').value.trim();
+  } else if (l.type === 'growth') {
+    const val = document.getElementById('e-gvalue').value;
+    const dateVal = document.getElementById('e-gdate').value;
+    if (!val) { alert('Insira o valor'); return; }
+    const ts = new Date(dateVal).getTime();
+    changes.value = +val;
+    changes.time = ts;
+    changes.date = new Date(ts).toDateString();
+    changes.growthType = document.querySelector('#e-gtype .toggle-btn.active')?.dataset.v || l.growthType;
+  } else if (l.type === 'med') {
+    const timeVal = document.getElementById('e-time').value;
+    if (!timeVal) { alert('Insira a hora'); return; }
+    changes.time = new Date(`${dateBase}T${timeVal}`).getTime();
+  }
+
+  DB.updateLog(S._editLogId, changes);
+  S._editLogId = null;
+  closeSheet();
+  showToast('Registo actualizado! ✓');
+  renderScreen(S.currentScreen);
+}
+
+function buildSleepSheet() {
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const prevH = String(now.getHours() - 1 >= 0 ? now.getHours()-1 : 23).padStart(2,'0');
+  return `<div class="sheet-title">Registar Sono</div>
+  <div class="form-group">
+    <label class="form-label">Início do sono</label>
+    <input type="time" class="form-control" id="s-start" value="${prevH}:${String(now.getMinutes()).padStart(2,'0')}">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Fim do sono</label>
+    <input type="time" class="form-control" id="s-end" value="${timeStr}">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Qualidade</label>
+    <div class="toggle-group" id="s-quality">
+      <button class="toggle-btn active" data-v="boa" onclick="toggleSelect(this,'s-quality')">😴 Boa</button>
+      <button class="toggle-btn" data-v="media" onclick="toggleSelect(this,'s-quality')">😪 Média</button>
+      <button class="toggle-btn" data-v="ma" onclick="toggleSelect(this,'s-quality')">😣 Má</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Notas</label>
+    <textarea class="form-control" id="s-notes" placeholder="Ex: Acordou a meio, muitos arrotos..."></textarea>
+  </div>
+  <button class="btn-primary" onclick="saveSleep()">Guardar registo 🌙</button>`;
+}
+function saveSleep() {
+  const start = document.getElementById('s-start').value;
+  const end = document.getElementById('s-end').value;
+  const quality = document.querySelector('#s-quality .toggle-btn.active')?.dataset.v;
+  const notes = document.getElementById('s-notes').value.trim();
+  if (!start) { alert('Insira a hora de início'); return; }
+  const today = new Date();
+  const startTs = new Date(`${today.toISOString().slice(0,10)}T${start}`).getTime();
+  const endTs = end ? new Date(`${today.toISOString().slice(0,10)}T${end}`).getTime() : null;
+  const duration = endTs ? endTs - startTs : null;
+  const log = { id: uid(), type: 'sleep', time: startTs, end: endTs, duration, quality, notes, date: todayStr() };
+  DB.addLog(log);
+  closeSheet();
+  showToast('Sono registado! 🌙');
+  renderSleep();
+}
+
+// ===== FEED SCREEN =====
+function renderFeed() {
+  const p = S.profile; if (!p) return;
+  renderAvatars();
+  const logs = DB.logs().filter(l => l.type === 'feed' && l.date === todayStr());
+  const lastFeed = logs.length ? logs[logs.length-1] : null;
+  let html = '';
+  if (lastFeed) {
+    const ago = fmtDuration(Date.now() - lastFeed.time);
+    html += `<div class="stat-card animate-in" style="margin-bottom:16px;display:block">
+      <div class="stat-label">Última refeição</div>
+      <div class="stat-value" style="font-size:24px">${ago} atrás</div>
+      <div class="stat-sub">às ${fmtTime(lastFeed.time)}</div>
+    </div>`;
+  }
+  html += `<button class="btn-primary mb-20 animate-in" onclick="openSheet('feed')" style="animation-delay:.05s">+ Nova refeição</button>`;
+  html += `<div class="section-title">Refeições de hoje</div>`;
+  if (logs.length === 0) {
+    html += `<div class="empty-state"><div class="empty-state-icon">🍼</div><div class="empty-state-text">Sem refeições registadas hoje</div><div class="empty-state-sub">Registe cada vez que der de comer à ${p.name}</div></div>`;
+  } else {
+    html += `<div class="log-list">` + logs.slice().reverse().map(l => logItemHtml(l, true)).join('') + `</div>`;
+  }
+  document.getElementById('feed-content').innerHTML = html;
+}
+function buildFeedSheet() {
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  return `<div class="sheet-title">Nova Refeição</div>
+  <div class="form-group">
+    <label class="form-label">Tipo de refeição</label>
+    <div class="toggle-group" id="f-type">
+      <button class="toggle-btn active" data-v="breast" onclick="toggleSelect(this,'f-type');showFeedFields()">🤱 Mama</button>
+      <button class="toggle-btn" data-v="formula" onclick="toggleSelect(this,'f-type');showFeedFields()">🍼 Biberão</button>
+      <button class="toggle-btn" data-v="solids" onclick="toggleSelect(this,'f-type');showFeedFields()">🥣 Papinha</button>
+    </div>
+  </div>
+  <div id="feed-extra">
+    <div class="form-group" id="f-breast-group">
+      <label class="form-label">Lado</label>
+      <div class="toggle-group" id="f-side">
+        <button class="toggle-btn active" data-v="esquerdo" onclick="toggleSelect(this,'f-side')">◉ Esquerdo</button>
+        <button class="toggle-btn" data-v="direito" onclick="toggleSelect(this,'f-side')">◉ Direito</button>
+        <button class="toggle-btn" data-v="ambos" onclick="toggleSelect(this,'f-side')">◉ Ambos</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Duração (minutos)</label>
+      <input type="number" class="form-control" id="f-duration" placeholder="Ex: 15" min="1" max="60">
+    </div>
+  </div>
+  <div id="f-formula-group" style="display:none">
+    <div class="form-group">
+      <label class="form-label">Quantidade (ml)</label>
+      <input type="number" class="form-control" id="f-amount" placeholder="Ex: 120" min="10" max="500">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Hora</label>
+    <input type="time" class="form-control" id="f-time" value="${timeStr}">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Notas</label>
+    <textarea class="form-control" id="f-notes" placeholder="Observações..."></textarea>
+  </div>
+  <button class="btn-primary" onclick="saveFeed()">Guardar refeição 🍼</button>`;
+}
+function showFeedFields() {
+  const type = document.querySelector('#f-type .toggle-btn.active')?.dataset.v;
+  document.getElementById('feed-extra').style.display = type === 'breast' ? 'block' : 'none';
+  document.getElementById('f-formula-group').style.display = type === 'formula' ? 'block' : 'none';
+}
+function saveFeed() {
+  const feedType = document.querySelector('#f-type .toggle-btn.active')?.dataset.v || 'breast';
+  const side = document.querySelector('#f-side .toggle-btn.active')?.dataset.v;
+  const duration = document.getElementById('f-duration')?.value;
+  const amount = document.getElementById('f-amount')?.value;
+  const notes = document.getElementById('f-notes').value.trim();
+  const timeVal = document.getElementById('f-time').value;
+  const today = new Date();
+  const ts = new Date(`${today.toISOString().slice(0,10)}T${timeVal}`).getTime();
+  const log = { id: uid(), type: 'feed', feedType, side, duration: duration ? +duration : null, amount: amount ? +amount : null, notes, time: ts, date: todayStr() };
+  DB.addLog(log);
+  closeSheet();
+  showToast('Refeição registada! 🍼');
+  renderFeed();
+}
+
+// ===== DIAPER SCREEN =====
+function renderDiaper() {
+  const p = S.profile; if (!p) return;
+  renderAvatars();
+  const logs = DB.logs().filter(l => l.type === 'diaper' && l.date === todayStr());
+  let html = `<button class="btn-primary mb-20 animate-in" onclick="openSheet('diaper')">+ Nova fralda</button>`;
+  html += `<div class="quick-stats animate-in" style="margin-bottom:16px;animation-delay:.05s">
+    <div class="stat-card"><span class="stat-icon">💧</span><span class="stat-label">Molhadas</span><span class="stat-value">${logs.filter(l=>l.diaperType==='wet'||l.diaperType==='both').length}</span></div>
+    <div class="stat-card"><span class="stat-icon">💩</span><span class="stat-label">Sujas</span><span class="stat-value">${logs.filter(l=>l.diaperType==='dirty'||l.diaperType==='both').length}</span></div>
+    <div class="stat-card"><span class="stat-icon">🧷</span><span class="stat-label">Ambas</span><span class="stat-value">${logs.filter(l=>l.diaperType==='both').length}</span></div>
+    <div class="stat-card"><span class="stat-icon">📊</span><span class="stat-label">Total</span><span class="stat-value">${logs.length}</span></div>
+  </div>`;
+  html += `<div class="section-title">Fraldas de hoje</div>`;
+  if (logs.length === 0) {
+    html += `<div class="empty-state"><div class="empty-state-icon">🧷</div><div class="empty-state-text">Sem fraldas registadas hoje</div><div class="empty-state-sub">Registe cada muda de fralda da ${p.name}</div></div>`;
+  } else {
+    html += `<div class="log-list">` + logs.slice().reverse().map(l => logItemHtml(l, true)).join('') + `</div>`;
+  }
+  document.getElementById('diaper-content').innerHTML = html;
+}
+function buildDiaperSheet() {
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  return `<div class="sheet-title">Nova Fralda</div>
+  <div class="form-group">
+    <label class="form-label">Tipo</label>
+    <div class="toggle-group" id="d-type">
+      <button class="toggle-btn active" data-v="wet" onclick="toggleSelect(this,'d-type')">💧 Molhada</button>
+      <button class="toggle-btn" data-v="dirty" onclick="toggleSelect(this,'d-type')">💩 Suja</button>
+      <button class="toggle-btn" data-v="both" onclick="toggleSelect(this,'d-type')">🧷 As duas</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Hora</label>
+    <input type="time" class="form-control" id="d-time" value="${timeStr}">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Notas</label>
+    <textarea class="form-control" id="d-notes" placeholder="Cor, consistência, observações..."></textarea>
+  </div>
+  <button class="btn-primary" onclick="saveDiaper()">Guardar 🧷</button>`;
+}
+function saveDiaper() {
+  const diaperType = document.querySelector('#d-type .toggle-btn.active')?.dataset.v || 'wet';
+  const notes = document.getElementById('d-notes').value.trim();
+  const timeVal = document.getElementById('d-time').value;
+  const today = new Date();
+  const ts = new Date(`${today.toISOString().slice(0,10)}T${timeVal}`).getTime();
+  const log = { id: uid(), type: 'diaper', diaperType, notes, time: ts, date: todayStr() };
+  DB.addLog(log);
+  closeSheet();
+  showToast('Fralda registada! 🧷');
+  renderDiaper();
+}
+
+// ===== MEDICATIONS =====
+function renderMed() {
+  const p = S.profile; if (!p) return;
+  renderAvatars();
+  const meds = DB.meds();
+  const medLogs = DB.medLogs();
+  let html = `<button class="btn-primary mb-20 animate-in" onclick="openSheet('med')">+ Adicionar medicamento</button>`;
+  html += `<div class="section-title">Medicamentos activos</div>`;
+  if (meds.length === 0) {
+    html += `<div class="empty-state"><div class="empty-state-icon">💊</div><div class="empty-state-text">Sem medicamentos registados</div><div class="empty-state-sub">Adicione os medicamentos da ${p.name} para nunca perder uma dose</div></div>`;
+  } else {
+    meds.forEach(med => {
+      const todayLogs = medLogs.filter(l => l.medId === med.id && l.date === todayStr());
+      const lastDose = todayLogs.length ? todayLogs[todayLogs.length-1] : null;
+      const nextDoseTime = lastDose ? new Date(lastDose.time + med.intervalH * 3600000) : null;
+      const nextDoseStr = nextDoseTime ? `Próx. dose: ${fmtTime(nextDoseTime)}` : 'Ainda não dada hoje';
+      html += `<div class="med-card animate-in">
+        <div class="med-icon">💊</div>
+        <div class="med-body">
+          <div class="med-name">${med.name}</div>
+          <div class="med-dose">${med.dose} · a cada ${med.intervalH}h</div>
+          <div class="med-next">${nextDoseStr}</div>
+          ${lastDose ? `<div style="font-size:11px;color:var(--text-muted)">Última: ${fmtTime(lastDose.time)}</div>` : ''}
+        </div>
+        <div class="med-action">
+          <button class="med-btn" onclick="giveMed('${med.id}')">Dar agora</button>
+          <button class="med-delete" onclick="deleteMed('${med.id}')">Remover</button>
+        </div>
+      </div>`;
+    });
+  }
+  document.getElementById('med-content').innerHTML = html;
+}
+function buildMedSheet() {
+  return `<div class="sheet-title">Novo Medicamento</div>
+  <div class="form-group">
+    <label class="form-label">Nome do medicamento</label>
+    <input type="text" class="form-control" id="m-name" placeholder="Ex: Paracetamol, Vitamina D...">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Dose</label>
+    <input type="text" class="form-control" id="m-dose" placeholder="Ex: 2.5ml, 1 comprimido...">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Intervalo entre doses (horas)</label>
+    <div class="toggle-group" id="m-interval">
+      <button class="toggle-btn" data-v="4" onclick="toggleSelect(this,'m-interval')">4h</button>
+      <button class="toggle-btn" data-v="6" onclick="toggleSelect(this,'m-interval')">6h</button>
+      <button class="toggle-btn active" data-v="8" onclick="toggleSelect(this,'m-interval')">8h</button>
+      <button class="toggle-btn" data-v="12" onclick="toggleSelect(this,'m-interval')">12h</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Notas / instruções</label>
+    <textarea class="form-control" id="m-notes" placeholder="Ex: Dar com comida, diluir em água..."></textarea>
+  </div>
+  <button class="btn-primary" onclick="saveMed()">Guardar medicamento 💊</button>`;
+}
+function saveMed() {
+  const name = document.getElementById('m-name').value.trim();
+  const dose = document.getElementById('m-dose').value.trim();
+  const intervalH = +(document.querySelector('#m-interval .toggle-btn.active')?.dataset.v || 8);
+  const notes = document.getElementById('m-notes').value.trim();
+  if (!name) { alert('Insira o nome do medicamento'); return; }
+  const med = { id: uid(), name, dose, intervalH, notes, createdAt: Date.now() };
+  DB.addMed(med);
+  closeSheet();
+  showToast('Medicamento adicionado! 💊');
+  renderMed();
+}
+function giveMed(medId) {
+  const med = DB.meds().find(m => m.id === medId); if (!med) return;
+  const log = { id: uid(), medId, medName: med.name, dose: med.dose, time: Date.now(), date: todayStr() };
+  DB.addMedLog(log);
+  DB.addLog({ id: uid(), type: 'med', medName: med.name, dose: med.dose, time: Date.now(), date: todayStr() });
+  showToast(`${med.name} administrado! 💊`);
+  sendMedNotification(med.name, med.dose);
+  renderMed();
+}
+function deleteMed(id) {
+  if (!confirm('Remover este medicamento?')) return;
+  DB.delMed(id);
+  renderMed();
+}
+
+// ===== GROWTH =====
+function renderGrowth() {
+  const p = S.profile; if (!p) return;
+  renderAvatars();
+  const logs = DB.logs().filter(l => l.type === 'growth');
+  const weightLogs = logs.filter(l => l.growthType === 'weight').sort((a,b) => a.time-b.time);
+  const heightLogs = logs.filter(l => l.growthType === 'height').sort((a,b) => a.time-b.time);
+  const lastW = weightLogs.length ? weightLogs[weightLogs.length-1] : null;
+  const lastH = heightLogs.length ? heightLogs[heightLogs.length-1] : null;
+  let html = `
+    <div class="growth-tabs animate-in">
+      <button class="growth-tab ${S.growthTab==='weight'?'active':''}" onclick="S.growthTab='weight';renderGrowth()">⚖️ Peso</button>
+      <button class="growth-tab ${S.growthTab==='height'?'active':''}" onclick="S.growthTab='height';renderGrowth()">📏 Altura</button>
+    </div>`;
+  const curLogs = S.growthTab === 'weight' ? weightLogs : heightLogs;
+  const lastEntry = S.growthTab === 'weight' ? lastW : lastH;
+  const unit = S.growthTab === 'weight' ? 'kg' : 'cm';
+  if (lastEntry) {
+    html += `<div class="growth-stat animate-in" style="margin-bottom:16px">
+      <div class="growth-stat-value">${lastEntry.value}<span class="growth-stat-unit">${unit}</span></div>
+      <div class="growth-stat-label">Último registo: ${fmtDate(lastEntry.time)}</div>
+    </div>`;
+  }
+  if (curLogs.length >= 2) html += buildGrowthChart(curLogs, unit);
+  html += `<button class="btn-primary mb-20 animate-in" onclick="openSheet('growth')" style="animation-delay:.1s">+ Registar ${S.growthTab==='weight'?'peso':'altura'}</button>`;
+  html += `<div class="section-title">Histórico</div>`;
+  if (curLogs.length === 0) {
+    html += `<div class="empty-state"><div class="empty-state-icon">📏</div><div class="empty-state-text">Sem registos de ${S.growthTab==='weight'?'peso':'altura'}</div><div class="empty-state-sub">Registe regularmente o crescimento da ${p.name}</div></div>`;
+  } else {
+    html += `<div class="log-list">` + curLogs.slice().reverse().map(l => logItemHtml(l, true)).join('') + `</div>`;
+  }
+  document.getElementById('growth-content').innerHTML = html;
+}
+function buildGrowthChart(logs, unit) {
+  const W = 280, H = 52;
+  const vals = logs.map(l => +l.value);
+  const minV = Math.min(...vals), maxV = Math.max(...vals);
+  const range = maxV - minV || 1;
+  const px = (l, i) => ({ x: (i/(logs.length-1))*W, y: H - ((+l.value-minV)/range)*H*0.78 - H*0.1 });
+  const pts = logs.map((l,i) => { const p=px(l,i); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' ');
+  const area = logs.map((l,i) => { const p=px(l,i); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' ') + ` ${W},${H} 0,${H}`;
+  return `<div class="chart-container animate-in" style="animation-delay:.05s">
+    <div class="chart-title">${unit === 'kg' ? 'Evolução do peso' : 'Evolução da altura'}</div>
+    <svg class="chart-svg" viewBox="0 0 280 60" preserveAspectRatio="none" style="height:80px;display:block">
+      <polygon points="${area}" fill="var(--growth-color)" opacity="0.12"/>
+      <polyline points="${pts}" fill="none" stroke="var(--growth-color)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${logs.map((l,i)=>{ const p=px(l,i); return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="var(--growth-color)"/><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2" fill="white"/>`; }).join('')}
+    </svg>
+  </div>`;
+}
+function buildGrowthSheet() {
+  return `<div class="sheet-title">Registar Crescimento</div>
+  <div class="form-group">
+    <label class="form-label">Tipo</label>
+    <div class="toggle-group" id="g-type">
+      <button class="toggle-btn active" data-v="weight" onclick="toggleSelect(this,'g-type')">⚖️ Peso (kg)</button>
+      <button class="toggle-btn" data-v="height" onclick="toggleSelect(this,'g-type')">📏 Altura (cm)</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Valor</label>
+    <input type="number" class="form-control" id="g-value" placeholder="Ex: 4.5" step="0.01" min="0">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Data</label>
+    <input type="date" class="form-control" id="g-date" value="${new Date().toISOString().slice(0,10)}">
+  </div>
+  <button class="btn-primary" onclick="saveGrowth()">Guardar medição 📏</button>`;
+}
+function saveGrowth() {
+  const growthType = document.querySelector('#g-type .toggle-btn.active')?.dataset.v || 'weight';
+  const value = document.getElementById('g-value').value;
+  const dateVal = document.getElementById('g-date').value;
+  if (!value) { alert('Insira o valor'); return; }
+  const ts = new Date(dateVal).getTime();
+  const log = { id: uid(), type: 'growth', growthType, value: +value, time: ts, date: new Date(ts).toDateString() };
+  DB.addLog(log);
+  closeSheet();
+  showToast('Medição guardada! 📏');
+  renderGrowth();
+}
+
+// ===== HISTORY =====
+function renderHistory() {
+  const p = S.profile; if (!p) return;
+  renderAvatars();
+  const logs = DB.logs().filter(l => l.date === S.historyDate).sort((a,b) => a.time-b.time);
+  const d = new Date(S.historyDate);
+  const dayNames = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const dateStr = `${dayNames[d.getDay()]}, ${d.getDate()} de ${d.toLocaleString('pt-PT',{month:'long'})}`;
+  let html = `
+    <div class="history-date-nav animate-in">
+      <div class="history-date-btn" onclick="changeHistoryDate(-1)">‹</div>
+      <div class="history-date">${dateStr}</div>
+      <div class="history-date-btn" onclick="changeHistoryDate(1)">›</div>
+    </div>`;
+  if (logs.length === 0) {
+    html += `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Sem registos para este dia</div><div class="empty-state-sub">Os registos da ${p.name} irão aparecer aqui</div></div>`;
+  } else {
+    html += `<div class="timeline">`;
+    logs.forEach(l => {
+      const types = { sleep:'sleep', feed:'feed', diaper:'diaper', med:'med', growth:'med' };
+      const icons = { sleep:'🌙', feed:'🍼', diaper:'🧷', med:'💊', growth:'📏' };
+      const titles = { sleep:'Sono', feed:'Alimentação', diaper:'Fralda', med:'Medicamento', growth:'Crescimento' };
+      let sub = '';
+      if (l.type === 'sleep') sub = l.duration ? fmtDuration(l.duration) : 'A dormir';
+      if (l.type === 'feed') sub = l.feedType === 'breast' ? `Mama ${l.side||''}` : l.feedType === 'formula' ? `Biberão ${l.amount||''}ml` : 'Papinha';
+      if (l.type === 'diaper') sub = l.diaperType === 'wet' ? 'Molhada' : l.diaperType === 'dirty' ? 'Suja' : 'Ambas';
+      if (l.type === 'med') sub = `${l.medName||''} ${l.dose||''}`;
+      if (l.type === 'growth') sub = l.growthType === 'weight' ? `${l.value}kg` : `${l.value}cm`;
+      html += `<div class="timeline-item">
+        <div class="timeline-dot ${types[l.type]||'feed'}"></div>
+        <div class="log-item" id="log-${l.id}">
+          <div class="log-item-icon ${types[l.type]||'feed'}">${icons[l.type]}</div>
+          <div class="log-item-body">
+            <div class="log-item-title">${titles[l.type]}</div>
+            <div class="log-item-sub">${sub}${l.notes?' · '+l.notes:''}</div>
+          </div>
+          <div class="log-item-time">${fmtTime(l.time)}</div>
+          <div class="log-item-edit" onclick="editLog('${l.id}')">✏️</div>
+          <div class="log-item-delete" onclick="deleteLog('${l.id}')">🗑</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  document.getElementById('history-content').innerHTML = html;
+}
+function changeHistoryDate(delta) {
+  const d = new Date(S.historyDate);
+  d.setDate(d.getDate() + delta);
+  if (d > new Date()) return;
+  S.historyDate = d.toDateString();
+  renderHistory();
+}
+
+// ===== SETTINGS =====
+const THEME_COLORS = [
+  { name: 'Rosa', hex: '#E8968A' },
+  { name: 'Pêssego', hex: '#E8A87C' },
+  { name: 'Lavanda', hex: '#9B8EC4' },
+  { name: 'Sálvia', hex: '#7FAF8C' },
+  { name: 'Azul', hex: '#7BA3BF' },
+  { name: 'Coral', hex: '#D4786B' },
+];
+function renderSettings() {
+  const p = S.profile; if (!p) return;
+  const wa = DB.waConfig();
+  const swatches = THEME_COLORS.map(c => `<div class="color-swatch ${p.themeColor===c.hex?'selected':''}" style="background:${c.hex}" onclick="setTheme('${c.hex}')" title="${c.name}"></div>`).join('');
+  const html = `
+    <div class="settings-section animate-in">
+      <div class="settings-section-title">Perfil do bebé</div>
+      <div class="card" style="margin-bottom:8px">
+        <div style="text-align:center;margin-bottom:20px">
+          <div class="photo-upload" id="settingsPhotoUpload" onclick="document.getElementById('settingsPhotoInput').click()" style="margin:0 auto 12px">
+            ${p.photo ? `<img src="${p.photo}" alt="foto">` : `<span class="photo-upload-icon">📷</span>`}
+          </div>
+          <input type="file" id="settingsPhotoInput" accept="image/*" style="display:none" onchange="handleSettingsPhoto(event)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nome do bebé</label>
+          <input type="text" class="form-control" id="set-baby-name" value="${p.name}" maxlength="30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data de nascimento</label>
+          <input type="date" class="form-control" id="set-birth" value="${p.birth}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nome da mamã</label>
+          <input type="text" class="form-control" id="set-mom" value="${p.mom||''}" maxlength="30">
+        </div>
+        <button class="btn-primary" onclick="saveSettings()">Guardar alterações</button>
+      </div>
+    </div>
+    <div class="settings-section animate-in" style="animation-delay:.05s">
+      <div class="settings-section-title">Cor do tema</div>
+      <div class="card">
+        <div class="color-swatches" id="colorSwatches">${swatches}</div>
+      </div>
+    </div>
+    ${(()=>{
+      const waConf = S.settings?.wa_config || {};
+      if (!waConf.enabled || waConf.status !== 'connected') return `
+        <div class="settings-section animate-in" style="animation-delay:.08s">
+          <div class="settings-section-title">Notificações WhatsApp</div>
+          <div class="card" style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">
+            💬 Notificações WhatsApp não estão disponíveis.<br>
+            <span style="font-size:12px;opacity:.7">Contacte o administrador para activar.</span>
+          </div>
+        </div>`;
+      const notifOn = (key) => (wa.notif||{})[key] !== false;
+      const notifRow = (key, label, sub) => `<div class="wa-notif-row">
+        <div><div class="wa-notif-label">${label}</div><div class="wa-notif-sub">${sub}</div></div>
+        <button class="wa-toggle ${notifOn(key)?'on':''}" onclick="toggleWaNotif('${key}',this)"></button>
+      </div>`;
+      const userDisabled = wa.enabled === false;
+      return `
+        <div class="settings-section animate-in" style="animation-delay:.08s">
+          <div class="settings-section-title">Notificações WhatsApp</div>
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border)">
+              <div>
+                <div style="font-size:14px;font-weight:700">Activar notificações</div>
+                <div style="font-size:12px;color:var(--text-muted)">WhatsApp · <span style="color:#25D366">● Ligado</span></div>
+              </div>
+              <button class="wa-toggle ${!userDisabled?'on':''}" onclick="toggleUserWa(this)"></button>
+            </div>
+            <div id="wa-user-notifs" style="${userDisabled?'opacity:.4;pointer-events:none':''}">
+              <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Tipo de notificações</div>
+              ${notifRow('meds',    '💊 Medicamentos',  'Quando uma dose é administrada')}
+              ${notifRow('summary', '📊 Resumo diário', 'Enviar o resumo do dia')}
+              ${notifRow('sleep',   '⏰ Alerta de sono','Aviso quando está na hora de dormir')}
+              <div style="margin-top:16px">
+                <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Números de destino</div>
+                <div id="wa-phones-list">${renderWaPhones()}</div>
+                <div style="display:flex;gap:8px;margin-top:10px">
+                  <input type="tel" class="form-control" id="wa-new-phone" placeholder="841234567" style="flex:1;font-size:14px">
+                  <button class="btn-primary" style="padding:10px 16px;font-size:16px;line-height:1" onclick="addWaPhone()">+</button>
+                </div>
+              </div>
+              <button class="btn-primary" style="margin-top:16px;width:100%" onclick="sendDailySummary()">📤 Enviar resumo agora</button>
+            </div>
+          </div>
+        </div>`;
+    })()}
+    <div class="settings-section animate-in" style="animation-delay:.11s">
+      <div class="settings-section-title">Dados</div>
+      <div class="settings-item" onclick="exportData()">
+        <div class="settings-item-left">
+          <div class="settings-item-icon">💾</div>
+          <div class="settings-item-label">Exportar dados</div>
+        </div>
+        <span class="settings-item-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="clearData()">
+        <div class="settings-item-left">
+          <div class="settings-item-icon">🗑</div>
+          <div class="settings-item-label" style="color:#C0392B">Apagar todos os dados</div>
+        </div>
+        <span class="settings-item-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="logout()">
+        <div class="settings-item-left">
+          <div class="settings-item-icon">🚪</div>
+          <div class="settings-item-label" style="color:#C0392B">Terminar sessão</div>
+        </div>
+        <span class="settings-item-arrow">›</span>
+      </div>
+    </div>
+    <div style="text-align:center;padding:20px 0;color:var(--text-muted);font-size:13px">
+      🌸 bebélog · feito com amor<br>para as mamãs de Moçambique
+    </div>`;
+  document.getElementById('settings-content').innerHTML = html;
+}
+function handleSettingsPhoto(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const p = DB.profile(); p.photo = ev.target.result; DB.setProfile(p); S.profile = p;
+    renderSettings(); renderAvatars();
+  };
+  reader.readAsDataURL(file);
+}
+function saveSettings() {
+  const p = DB.profile();
+  p.name = document.getElementById('set-baby-name').value.trim() || p.name;
+  p.birth = document.getElementById('set-birth').value || p.birth;
+  p.mom = document.getElementById('set-mom').value.trim();
+  DB.setProfile(p); S.profile = p;
+  showToast('Definições guardadas! ✓');
+  renderAvatars();
+}
+function setTheme(hex) {
+  const p = DB.profile(); p.themeColor = hex; DB.setProfile(p); S.profile = p;
+  setThemeColor(hex);
+  renderSettings();
+}
+function exportData() {
+  const data = { profile: DB.profile(), logs: DB.logs(), meds: DB.meds(), medLogs: DB.medLogs() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `bebelog_${S.profile?.name||'dados'}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+function clearData() {
+  if (!confirm('Tem a certeza? Todos os dados serão apagados permanentemente.')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+// ===== EVOLUTION / WHATSAPP =====
+
+// User config: phones + per-type toggles (set by user in settings)
+DB.waConfig    = () => DB.get('waConfig') || { phones:[], enabled:true, notif:{ meds:true, summary:true, sleep:false, welcome:true } };
+DB.setWaConfig = cfg => DB.set('waConfig', cfg);
+
+// Template variable substitution
+function fillTemplate(tpl, vars) {
+  return tpl.replace(/\{([\w]+)\}/g, (_, k) => vars[k] !== undefined ? vars[k] : `{${k}}`);
+}
+
+function buildSummaryVars() {
+  const p  = S.profile;
+  const logs    = DB.logs().filter(l => l.date === todayStr());
+  const sleeps  = logs.filter(l => l.type === 'sleep');
+  const feeds   = logs.filter(l => l.type === 'feed');
+  const diapers = logs.filter(l => l.type === 'diaper');
+  const meds    = DB.medLogs().filter(l => l.date === todayStr());
+  const totalSleepMs = sleeps.reduce((a,l) => a+(l.duration||0), 0);
+  const now  = new Date();
+  const pred = predictNextSleep(DB.logs(), p.birth);
+  const dayNames   = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const monthNames = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  let medLines = meds.length ? meds.map(m=>`• ${m.medName} ${m.dose} — ${fmtTime(m.time)}`).join('\n') : '';
+  return {
+    bebé:      p?.name || 'Bebé',
+    mamã:      p?.mom  || 'Mamã',
+    data:      `${dayNames[now.getDay()]}, ${now.getDate()} de ${monthNames[now.getMonth()]}`,
+    idade:     getBabyAge(p?.birth),
+    sono:      totalSleepMs ? fmtDuration(totalSleepMs) : '—',
+    sestas:    String(sleeps.length),
+    refeições: String(feeds.length),
+    fraldas:   String(diapers.length),
+    proxSono:  pred ? pred.time : '—',
+    meds:      medLines,
+  };
+}
+
+async function sendWhatsApp(message) {
+  const wa     = DB.waConfig();
+  const waConf = S.settings?.wa_config || {};
+  if (!waConf.enabled || wa.enabled === false) return false;
+  const phones = (wa.phones || []).filter(Boolean);
+  if (!phones.length) return false;
+  const r = await API.post('/send_notification.php', { message, phones });
+  return r?.ok === true;
+}
+
+async function sendDailySummary() {
+  const waConf = S.settings?.wa_config || {};
+  const wa     = DB.waConfig();
+  if (!waConf.enabled) { showScreen('settings'); showToast('WhatsApp não configurado pelo administrador'); return; }
+  if (!wa.phones?.length) { showScreen('settings'); showToast('Adicione um número nas Definições'); return; }
+  showToast('A enviar para WhatsApp…');
+  const tpl = S.settings?.templates?.summary || '🌸 *Resumo do dia — {bebé}*\n📅 {data}\n👶 {idade}\n\n🌙 Sono: {sono} ({sestas} sestas)\n🍼 Refeições: {refeições}\n🧷 Fraldas: {fraldas}\n⏰ Próx. sono: ~{proxSono}\n\n_bebélog_ 💕';
+  const msg = fillTemplate(tpl, buildSummaryVars());
+  const ok  = await sendWhatsApp(msg);
+  if (ok) showToast('Resumo enviado! 📤');
+}
+
+async function sendMedNotification(medName, dose) {
+  const waConf = S.settings?.wa_config || {};
+  const wa     = DB.waConfig();
+  if (!waConf.enabled || wa.notif?.meds === false) return;
+  const p   = S.profile;
+  const tpl = S.settings?.templates?.meds || '💊 *{bebé} tomou medicamento*\n\n{med}{dose}\n🕐 {hora}\n\n_bebélog_ 💕';
+  const msg = fillTemplate(tpl, {
+    bebé: p?.name || 'Bebé', mamã: p?.mom || 'Mamã',
+    med: medName, dose: dose ? ` — ${dose}` : '', hora: fmtTime(Date.now())
+  });
+  await sendWhatsApp(msg);
+}
+
+async function sendWelcomeNotification() {
+  const waConf = S.settings?.wa_config || {};
+  if (!waConf.enabled || !waConf.welcome_enabled) return;
+  const p   = S.profile;
+  const tpl = S.settings?.templates?.welcome || '🌸 *Bem-vinda ao bebélog, {mamã}!*\n\nEstamos felizes por estar consigo nesta jornada com a {bebé}. 💕\n\n_bebélog_ 🌺';
+  const msg = fillTemplate(tpl, { bebé: p?.name || 'Bebé', mamã: p?.mom || 'Mamã' });
+  await sendWhatsApp(msg);
+}
+
+function updateShareBtn() {
+  const waConf = S.settings?.wa_config || {};
+  const wa     = DB.waConfig();
+  const btn    = document.getElementById('dash-share-btn');
+  if (btn) btn.style.display = (waConf.enabled && waConf.status === 'connected' && wa.phones?.length) ? 'flex' : 'none';
+}
+
+// ===== USER WA SETTINGS =====
+function toggleWaNotif(key, btn) {
+  const wa = DB.waConfig();
+  wa.notif = wa.notif || {};
+  wa.notif[key] = !(wa.notif[key] !== false);
+  DB.setWaConfig(wa);
+  btn.classList.toggle('on', wa.notif[key]);
+}
+
+function toggleUserWa(btn) {
+  const wa = DB.waConfig();
+  wa.enabled = !wa.enabled;
+  DB.setWaConfig(wa);
+  btn.classList.toggle('on', wa.enabled);
+  const body = document.getElementById('wa-user-notifs');
+  if (body) body.style.opacity = wa.enabled ? '1' : '0.4';
+  if (body) body.style.pointerEvents = wa.enabled ? '' : 'none';
+}
+
+function renderWaPhones() {
+  const phones = DB.waConfig().phones || [];
+  if (!phones.length) return `<div style="font-size:13px;color:var(--text-muted);padding:6px 0">Nenhum número adicionado</div>`;
+  return phones.map((ph, i) => `<div class="log-item" style="padding:10px 12px;margin-bottom:6px">
+    <span style="flex:1;font-size:13px;font-family:monospace">+${ph}</span>
+    <span style="font-size:13px;color:var(--text-muted);margin-right:8px;cursor:pointer" onclick="testSendToPhone('${ph}')">🔔 testar</span>
+    <span style="color:#c0392b;font-size:18px;cursor:pointer;line-height:1" onclick="removeWaPhone(${i})">×</span>
+  </div>`).join('');
+}
+
+function addWaPhone() {
+  const input = document.getElementById('wa-new-phone');
+  const num = normalizePhone(input?.value || '');
+  if (num.length < 10) { showToast('Número inválido'); return; }
+  const wa = DB.waConfig();
+  wa.phones = wa.phones || [];
+  if (wa.phones.includes(num)) { showToast('Número já adicionado'); return; }
+  wa.phones.push(num);
+  DB.setWaConfig(wa);
+  input.value = '';
+  const list = document.getElementById('wa-phones-list');
+  if (list) list.innerHTML = renderWaPhones();
+  updateShareBtn();
+}
+
+function removeWaPhone(idx) {
+  const wa = DB.waConfig();
+  wa.phones = wa.phones || [];
+  wa.phones.splice(idx, 1);
+  DB.setWaConfig(wa);
+  const list = document.getElementById('wa-phones-list');
+  if (list) list.innerHTML = renderWaPhones();
+  updateShareBtn();
+}
+
+async function testSendToPhone(phone) {
+  const waConf = S.settings?.wa_config || {};
+  if (!waConf.enabled) { showToast('WhatsApp não configurado pelo administrador'); return; }
+  const p    = S.profile;
+  const text = `🌸 bebélog — mensagem de teste para ${p?.name || 'Bebé'}! ✓`;
+  showToast('A enviar mensagem de teste…');
+  const r = await API.post('/send_notification.php', { message: text, phones: [phone] });
+  if (r?.ok) showToast(`Teste enviado para +${phone}! ✓`);
+  else showToast('Falha ao enviar teste');
+}
+
+// ===== TOGGLE SELECT =====
+function toggleSelect(btn, groupId) {
+  document.querySelectorAll(`#${groupId} .toggle-btn`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ===== INSIGHTS =====
+
+// Age norms: [maxAgeMonths, sleepHoursMin, sleepHoursMax, feedsMin, feedsMax, wetDiapersMin, wetDiapersMax]
+const AGE_NORMS = [
+  [1,  14, 17, 8, 12, 1,  6 ],
+  [3,  14, 17, 8, 12, 6,  8 ],
+  [6,  12, 16, 6,  8, 6,  8 ],
+  [12, 12, 15, 4,  6, 6,  8 ],
+  [24, 11, 14, 3,  5, 4,  6 ],
+  [999,10, 13, 2,  3, 4,  6 ],
+];
+function getNorms(ageMonths) {
+  return AGE_NORMS.find(n => ageMonths < n[0]) || AGE_NORMS[AGE_NORMS.length-1];
+}
+
+// Age-based development milestones
+const MILESTONES = [
+  { maxM: 1,  items: [
+    { icon: '👁️', title: 'Visão', text: 'Foca rostos a 20–30cm. Preferência por contrastes fortes e pelo rosto da mamã.' },
+    { icon: '👂', title: 'Audição', text: 'Reage a sons familiares, especialmente à voz da mamã.' },
+    { icon: '🤝', title: 'Reflexos', text: 'Reflexo de preensão ativo — dedos fecham ao toque.' },
+  ]},
+  { maxM: 3,  items: [
+    { icon: '😊', title: 'Primeiro sorriso social', text: 'Por volta das 6–8 semanas surgem os primeiros sorrisos intencionais.' },
+    { icon: '🗣️', title: 'Vocalização', text: 'Começa a fazer sons de arrullo (arrulhos e "ohs").' },
+    { icon: '💪', title: 'Controlo da cabeça', text: 'A erguer a cabeça por breves momentos quando está de barriga para baixo.' },
+  ]},
+  { maxM: 6,  items: [
+    { icon: '🔄', title: 'Virar', text: 'Consegue virar de barriga para cima para barriga para baixo.' },
+    { icon: '😂', title: 'Gargalhadas', text: 'Primeiras gargalhadas! Responde com alegria a interações.' },
+    { icon: '🖐️', title: 'Exploração', text: 'Leva objetos à boca e explora texturas com as mãos.' },
+  ]},
+  { maxM: 9,  items: [
+    { icon: '🪑', title: 'Sentar', text: 'Começa a sentar-se com apoio, depois sem ajuda.' },
+    { icon: '🗣️', title: 'Balbuciar', text: 'Sons tipo "mamã", "babá" — ainda sem significado específico.' },
+    { icon: '🤸', title: 'Movimento', text: 'Rasteja ou arrasta o corpo. Possivelmente a gatinhar.' },
+  ]},
+  { maxM: 12, items: [
+    { icon: '🚶', title: 'Primeiros passos', text: 'Pode dar os primeiros passos com apoio. Cada bebé no seu tempo!' },
+    { icon: '👋', title: 'Comunicação', text: 'Gestos intencionais: acenar, apontar, bater palmas.' },
+    { icon: '🍽️', title: 'Alimentação', text: 'Começa a experimentar alimentos sólidos em pedaços pequenos.' },
+  ]},
+  { maxM: 999, items: [
+    { icon: '🗨️', title: 'Primeiras palavras', text: 'Vocabulário a crescer — pode ter 10–50 palavras.' },
+    { icon: '🏃', title: 'Mobilidade', text: 'Corre, sobe escadas com ajuda, explora o ambiente com confiança.' },
+    { icon: '🎭', title: 'Jogo imaginativo', text: 'Brinca ao faz-de-conta e imita adultos.' },
+  ]},
+];
+function getMilestones(ageMonths) {
+  return MILESTONES.find(m => ageMonths < m.maxM) || MILESTONES[MILESTONES.length-1];
+}
+
+function getLogsForPeriod(period) {
+  const now = Date.now();
+  const logs = DB.logs();
+  if (period === 'today') return logs.filter(l => l.date === todayStr());
+  if (period === 'week')  return logs.filter(l => l.time >= now - 7*86400000);
+  if (period === 'month') return logs.filter(l => l.time >= now - 30*86400000);
+  return logs;
+}
+
+function statusFromScore(score) {
+  if (score >= 0.75) return { cls: 'excellent', emoji: '✨', title: 'Excelente!', label: 'excellent' };
+  if (score >= 0.45) return { cls: 'good',      emoji: '💛', title: 'Bem!',       label: 'good' };
+  return               { cls: 'attention',  emoji: '💙', title: 'Atenção',     label: 'attention' };
+}
+
+function normStatus(value, min, max) {
+  if (value >= min && value <= max) return 'green';
+  if (value >= min*0.7 && value < min) return 'yellow';
+  if (value > max && value <= max*1.3) return 'yellow';
+  return 'red';
+}
+
+function barFill(value, min, max) {
+  return Math.min(100, Math.round((value / max) * 100));
+}
+
+function renderInsights() {
+  const p = S.profile; if (!p) return;
+  renderAvatars();
+  const period = S.insightsPeriod;
+  const ageM = getBabyAgeMonths(p.birth);
+  const norms = getNorms(ageM);
+  const logs = getLogsForPeriod(period);
+  const sleepLogs  = logs.filter(l => l.type === 'sleep');
+  const feedLogs   = logs.filter(l => l.type === 'feed');
+  const diaperLogs = logs.filter(l => l.type === 'diaper');
+
+  // ---- Period-specific aggregates ----
+  let sleepH, feedCount, wetCount, days;
+  if (period === 'today') {
+    sleepH    = sleepLogs.reduce((a,l) => a+(l.duration||0),0) / 3600000;
+    feedCount = feedLogs.length;
+    wetCount  = diaperLogs.filter(l => l.diaperType!=='dirty').length;
+    days = 1;
+  } else {
+    days      = period === 'week' ? 7 : 30;
+    sleepH    = sleepLogs.reduce((a,l) => a+(l.duration||0),0) / 3600000 / days;
+    feedCount = feedLogs.length / days;
+    wetCount  = diaperLogs.filter(l => l.diaperType!=='dirty').length / days;
+  }
+
+  const sleepStatus  = normStatus(sleepH,    norms[1], norms[2]);
+  const feedStatus   = normStatus(feedCount,  norms[3], norms[4]);
+  const diaperStatus = normStatus(wetCount,   norms[5], norms[6]);
+
+  const statusScores = { green: 1, yellow: 0.5, red: 0 };
+  const score = (statusScores[sleepStatus] + statusScores[feedStatus] + statusScores[diaperStatus]) / 3;
+  const st = statusFromScore(score);
+
+  // ---- Period-specific label helpers ----
+  const perLabel = period === 'today' ? 'hoje' : period === 'week' ? '/dia (semana)' : '/dia (mês)';
+  const normLabel = period === 'today' ? 'por dia' : 'por dia';
+
+  // ---- Week sparkline data (for week/month view) ----
+  const buildSparkline = (type, colorVar) => {
+    const d7 = [];
+    for (let i=6; i>=0; i--) {
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const ds = d.toDateString();
+      const dayLogs = DB.logs().filter(l => l.type === type && l.date === ds);
+      const val = type === 'sleep'
+        ? dayLogs.reduce((a,l)=>a+(l.duration||0),0)/3600000
+        : dayLogs.length;
+      d7.push(val);
+    }
+    const mx = Math.max(...d7, 0.1);
+    const dayNames = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const today = new Date().getDay();
+    return `<div class="week-bars">${d7.map((v,i) => {
+      const pct = Math.max((v/mx)*100, v>0?8:0);
+      const dIdx = (new Date().getDay() - 6 + i + 7) % 7;
+      const isTod = i === 6;
+      return `<div class="week-bar-wrap">
+        <div class="week-bar" style="height:${pct}%;background:${isTod?`var(${colorVar})`:`var(${colorVar})`};opacity:${isTod?1:0.4}"></div>
+      </div>`;
+    }).join('')}</div>
+    <div style="display:flex;gap:4px">${d7.map((_,i) => {
+      const dIdx = (new Date().getDay() - 6 + i + 7) % 7;
+      return `<div class="week-bar-label" style="flex:1;text-align:center">${dayNames[dIdx]}</div>`;
+    }).join('')}</div>`;
+  };
+
+  // ---- Average interval between feeds ----
+  const sortedFeeds = [...feedLogs].sort((a,b)=>a.time-b.time);
+  let avgFeedInterval = null;
+  if (sortedFeeds.length >= 2) {
+    const gaps = [];
+    for (let i=1;i<sortedFeeds.length;i++) gaps.push((sortedFeeds[i].time-sortedFeeds[i-1].time)/3600000);
+    avgFeedInterval = gaps.reduce((a,b)=>a+b,0)/gaps.length;
+  }
+
+  // ---- Longest sleep stretch ----
+  const longestSleep = sleepLogs.reduce((mx,l) => Math.max(mx, l.duration||0), 0);
+
+  // ---- Best sleep day of week (week/month) ----
+  const sleepByDay = Array(7).fill(0);
+  const sleepDayCounts = Array(7).fill(0);
+  DB.logs().filter(l=>l.type==='sleep'&&l.duration).forEach(l=>{
+    const d = new Date(l.time).getDay(); sleepByDay[d]+=l.duration/3600000; sleepDayCounts[d]++;
+  });
+  const avgSleepByDay = sleepByDay.map((h,i)=> sleepDayCounts[i]>0 ? h/sleepDayCounts[i] : 0);
+  const bestDayIdx = avgSleepByDay.indexOf(Math.max(...avgSleepByDay));
+  const dayNames = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+  // ---- Insight texts ----
+  const sleepTexts = {
+    green:  `Muito bem! A ${p.name} está a dormir dentro do intervalo recomendado para a sua idade.`,
+    yellow: `O sono está um pouco fora do ideal. Tente manter rotinas consistentes de adormecer.`,
+    red:    `O sono está aquém do recomendado. Considere falar com o pediatra se persistir.`,
+  };
+  const feedTexts = {
+    green:  `A frequência de refeições está ótima para a idade da ${p.name}. Continue assim!`,
+    yellow: `A frequência está ligeiramente fora do intervalo. Observe sinais de fome ou saciedade.`,
+    red:    `A frequência de refeições está fora do esperado. Considere consultar o pediatra.`,
+  };
+  const diaperTexts = {
+    green:  `Boa hidratação! O número de fraldas molhadas indica boa ingestão de leite.`,
+    yellow: `O número de fraldas pode indicar hidratação ligeiramente baixa. Ofereça mais mama/biberão.`,
+    red:    `Poucas fraldas molhadas podem ser sinal de desidratação. Consulte o pediatra.`,
+  };
+
+  // ---- Milestones for age ----
+  const milestoneData = getMilestones(ageM);
+
+  // ---- Period comparison (week vs prev week) ----
+  const buildCompare = () => {
+    if (period !== 'week') return '';
+    const now = Date.now();
+    const thisW  = DB.logs().filter(l => l.time >= now - 7*86400000);
+    const prevW  = DB.logs().filter(l => l.time >= now - 14*86400000 && l.time < now - 7*86400000);
+    const thisSleep  = thisW.filter(l=>l.type==='sleep').reduce((a,l)=>a+(l.duration||0),0)/3600000/7;
+    const prevSleep  = prevW.filter(l=>l.type==='sleep').reduce((a,l)=>a+(l.duration||0),0)/3600000/7;
+    const thisFeeds  = thisW.filter(l=>l.type==='feed').length/7;
+    const prevFeeds  = prevW.filter(l=>l.type==='feed').length/7;
+    const thisDiap   = thisW.filter(l=>l.type==='diaper').length/7;
+    const prevDiap   = prevW.filter(l=>l.type==='diaper').length/7;
+    const row = (label, cur, prev, unit) => {
+      const diff = cur - prev;
+      const pct = prev > 0 ? Math.round(Math.abs(diff)/prev*100) : 0;
+      const badge = Math.abs(diff) < 0.05*Math.max(cur,prev,0.1) ? 'same'
+                  : diff > 0 ? 'up' : 'down';
+      const badgeLabel = badge === 'same' ? '=' : badge === 'up' ? `+${pct}%` : `-${pct}%`;
+      return `<div class="compare-row">
+        <span class="compare-label">${label}</span>
+        <span class="compare-val">${cur.toFixed(1)}${unit}</span>
+        <span class="compare-badge ${badge}">${badgeLabel}</span>
+      </div>`;
+    };
+    return `<div class="insight-card animate-in">
+      <div class="insight-card-header">
+        <div class="insight-card-title"><span class="insight-card-title-icon">📊</span> Esta semana vs. semana passada</div>
+      </div>
+      ${row('Sono médio/dia', thisSleep, prevSleep, 'h')}
+      ${row('Refeições/dia',  thisFeeds, prevFeeds, '')}
+      ${row('Fraldas/dia',    thisDiap,  prevDiap,  '')}
+    </div>`;
+  };
+
+  // ---- Status subtitle ----
+  const statusSub = {
+    today: `${p.name} teve um ${st.label === 'excellent' ? 'ótimo' : st.label === 'good' ? 'bom' : 'dia com atenção'} dia hoje.`,
+    week:  `Resumo dos últimos 7 dias para a ${p.name}.`,
+    month: `Resumo dos últimos 30 dias para a ${p.name}.`,
+  }[period];
+
+  let html = `
+    <div class="insights-period-tabs animate-in">
+      <div class="period-tab ${period==='today'?'active':''}" onclick="S.insightsPeriod='today';renderInsights()">Hoje</div>
+      <div class="period-tab ${period==='week'?'active':''}"  onclick="S.insightsPeriod='week';renderInsights()">Semana</div>
+      <div class="period-tab ${period==='month'?'active':''}" onclick="S.insightsPeriod='month';renderInsights()">Mês</div>
+    </div>
+
+    <div class="status-card ${st.cls} animate-in" style="animation-delay:.04s">
+      <div class="status-card-deco"></div>
+      <div class="status-card-emoji">${st.emoji}</div>
+      <div class="status-card-title">${st.title}</div>
+      <div class="status-card-sub">${statusSub}</div>
+    </div>
+
+    <!-- SLEEP CARD -->
+    <div class="insight-card animate-in" style="animation-delay:.08s">
+      <div class="insight-card-header">
+        <div class="insight-card-title"><span class="insight-card-title-icon">🌙</span> Sono</div>
+        <div class="insight-status-dot ${sleepStatus}"></div>
+      </div>
+      <div class="insight-metrics">
+        <div class="insight-value">${sleepH.toFixed(1)}</div>
+        <div class="insight-unit">h ${perLabel}</div>
+        <div class="insight-vs">ideal ${norms[1]}–${norms[2]}h</div>
+      </div>
+      <div class="insight-bar-wrap"><div class="insight-bar-fill ${sleepStatus}" style="width:${barFill(sleepH,norms[1],norms[2])}%"></div></div>
+      <div class="insight-range"><span>${norms[1]}h mínimo</span><span>${norms[2]}h máximo</span></div>
+      <div class="divider"></div>
+      ${period !== 'today' ? buildSparkline('sleep','--sleep-color') : ''}
+      ${longestSleep > 0 ? `<div class="insight-text" style="margin-top:8px">⭐ Maior período seguido: <strong>${fmtDuration(longestSleep)}</strong></div>` : ''}
+      ${bestDayIdx >= 0 && sleepByDay[bestDayIdx] > 0 ? `<div class="insight-text" style="margin-top:4px">📅 Melhor dia da semana: <strong>${dayNames[bestDayIdx]}</strong></div>` : ''}
+      <div class="insight-text" style="margin-top:8px">${sleepTexts[sleepStatus]}</div>
+    </div>
+
+    <!-- FEED CARD -->
+    <div class="insight-card animate-in" style="animation-delay:.12s">
+      <div class="insight-card-header">
+        <div class="insight-card-title"><span class="insight-card-title-icon">🍼</span> Alimentação</div>
+        <div class="insight-status-dot ${feedStatus}"></div>
+      </div>
+      <div class="insight-metrics">
+        <div class="insight-value">${feedCount.toFixed(1)}</div>
+        <div class="insight-unit">refeições ${perLabel}</div>
+        <div class="insight-vs">ideal ${norms[3]}–${norms[4]}</div>
+      </div>
+      <div class="insight-bar-wrap"><div class="insight-bar-fill ${feedStatus}" style="width:${barFill(feedCount,norms[3],norms[4])}%"></div></div>
+      <div class="insight-range"><span>${norms[3]} mínimo</span><span>${norms[4]} máximo</span></div>
+      <div class="divider"></div>
+      ${period !== 'today' ? buildSparkline('feed','--feed-color') : ''}
+      ${avgFeedInterval !== null ? `<div class="insight-text" style="margin-top:8px">⏱ Intervalo médio entre refeições: <strong>${avgFeedInterval.toFixed(1)}h</strong></div>` : ''}
+      <div class="insight-text" style="margin-top:4px">${feedTexts[feedStatus]}</div>
+    </div>
+
+    <!-- DIAPER CARD -->
+    <div class="insight-card animate-in" style="animation-delay:.16s">
+      <div class="insight-card-header">
+        <div class="insight-card-title"><span class="insight-card-title-icon">🧷</span> Fraldas</div>
+        <div class="insight-status-dot ${diaperStatus}"></div>
+      </div>
+      <div class="insight-metrics">
+        <div class="insight-value">${wetCount.toFixed(1)}</div>
+        <div class="insight-unit">fraldas molhadas ${perLabel}</div>
+        <div class="insight-vs">ideal ${norms[5]}–${norms[6]}</div>
+      </div>
+      <div class="insight-bar-wrap"><div class="insight-bar-fill ${diaperStatus}" style="width:${barFill(wetCount,norms[5],norms[6])}%"></div></div>
+      <div class="insight-range"><span>${norms[5]} mínimo</span><span>${norms[6]} máximo</span></div>
+      ${diaperLogs.length > 0 ? `<div class="divider"></div>
+      <div class="insight-text">
+        💧 Molhadas: <strong>${diaperLogs.filter(l=>l.diaperType==='wet'||l.diaperType==='both').length}</strong> &nbsp;
+        💩 Sujas: <strong>${diaperLogs.filter(l=>l.diaperType==='dirty'||l.diaperType==='both').length}</strong> &nbsp;
+        🧷 Ambas: <strong>${diaperLogs.filter(l=>l.diaperType==='both').length}</strong>
+      </div>` : ''}
+      <div class="insight-text" style="margin-top:8px">${diaperTexts[diaperStatus]}</div>
+    </div>
+
+    ${buildCompare()}
+
+    <!-- MILESTONES -->
+    <div class="insight-card animate-in" style="animation-delay:.2s">
+      <div class="insight-card-header">
+        <div class="insight-card-title"><span class="insight-card-title-icon">🌱</span> Nesta fase · ${getBabyAge(p.birth)}</div>
+      </div>
+      <div class="insight-text" style="margin-bottom:12px">O que esperar e observar no desenvolvimento da ${p.name}:</div>
+      ${milestoneData.items.map(m => `<div class="milestone-item">
+        <span class="milestone-icon">${m.icon}</span>
+        <div class="milestone-text"><strong>${m.title}</strong>${m.text}</div>
+      </div>`).join('')}
+    </div>
+
+    <!-- TIPS -->
+    <div class="tip-card animate-in" style="animation-delay:.24s">
+      <div class="tip-card-label">💡 Dica para a mamã</div>
+      <div class="tip-card-text">${getTipForAge(ageM, sleepStatus, feedStatus)}</div>
+    </div>
+
+    <div style="height:8px"></div>`;
+
+  document.getElementById('insights-content').innerHTML = html;
+}
+
+function getTipForAge(ageM, sleepStatus, feedStatus) {
+  const tips = [
+    { maxM: 1,  tip: 'Nos primeiros dias, o bebé não distingue dia de noite. Exponha-o à luz natural durante o dia e mantenha o quarto escuro e silencioso à noite para ajudar a regular o ritmo circadiano.' },
+    { maxM: 3,  tip: 'A rotina do banho antes de dormir é um excelente sinal para o cérebro do bebé que a noite chegou. Consistência é a chave para noites mais tranquilas.' },
+    { maxM: 6,  tip: 'Nesta fase, muitos bebés começam a dormir períodos mais longos à noite. Se ainda não acontece, experimente colocar o bebé na cama sonolento mas ainda acordado.' },
+    { maxM: 12, tip: 'A introdução de alimentos sólidos não substitui o leite materno ou biberão até ao primeiro aniversário. Continue a oferecer leite como alimentação principal.' },
+    { maxM: 24, tip: 'A leitura de histórias antes de dormir estimula a linguagem e cria uma associação positiva com o momento de descanso.' },
+    { maxM: 999,tip: 'Bebés mais velhos beneficiam de horários consistentes para refeições e sono. A previsibilidade dá-lhes segurança emocional.' },
+  ];
+  if (sleepStatus === 'red') return 'Sono insuficiente pode afetar o humor e o desenvolvimento. Tente uma rotina de adormecimento: banho, massagem suave, luz baixa, e música calma.';
+  if (feedStatus === 'red') return 'Se o bebé recusa refeições, verifique sinais de doença, dentição ou mudança de fase. Em caso de dúvida, o pediatra é sempre o melhor recurso.';
+  return (tips.find(t => ageM < t.maxM) || tips[tips.length-1]).tip;
+}
+
+// ===== ALBUM =====
+
+const MILESTONE_PRESETS = [
+  { id: 'p-bath',      emoji: '🛁', name: 'Primeiro Banho em Casa',       color: '#A07BBF', hint: 'Primeiros dias' },
+  { id: 'p-smile',     emoji: '😊', name: 'Primeiro Sorriso',             color: '#8DC17A', hint: '~6 semanas'    },
+  { id: 'p-laugh',     emoji: '😂', name: 'Primeira Gargalhada',          color: '#8DC17A', hint: '~3 meses'      },
+  { id: 'p-roll',      emoji: '🔄', name: 'Primeira Vez a Virar',         color: '#7B9FBF', hint: '~4 meses'      },
+  { id: 'p-sleep6',    emoji: '🌙', name: 'Dormiu 6h Seguidas!',          color: '#7B9FBF', hint: 'Varia'         },
+  { id: 'p-solids',    emoji: '🥣', name: 'Primeira Papinha',             color: '#C4A87D', hint: '~6 meses'      },
+  { id: 'p-tooth',     emoji: '🦷', name: 'Primeiro Dente',               color: '#C4A87D', hint: '~6 meses'      },
+  { id: 'p-sit',       emoji: '🪑', name: 'Primeira Vez a Sentar',        color: '#7B9FBF', hint: '~6 meses'      },
+  { id: 'p-hug',       emoji: '🤗', name: 'Primeiro Abraço Intencional',  color: '#E8968A', hint: '~5 meses'      },
+  { id: 'p-peek',      emoji: '👋', name: 'Primeiro Adeus com a Mão',     color: '#8DC17A', hint: '~9 meses'      },
+  { id: 'p-crawl',     emoji: '🤸', name: 'Primeiro Gatinhar',            color: '#7B9FBF', hint: '~9 meses'      },
+  { id: 'p-steps',     emoji: '👣', name: 'Primeiros Passos',             color: '#7B9FBF', hint: '~12 meses'     },
+  { id: 'p-word',      emoji: '🗣️', name: 'Primeira Palavra',             color: '#8DC17A', hint: '~12 meses'     },
+  { id: 'p-haircut',   emoji: '✂️', name: 'Primeiro Corte de Cabelo',     color: '#E8968A', hint: 'Quando crescer' },
+  { id: 'p-swim',      emoji: '🌊', name: 'Primeira Vez na Água',         color: '#7B9FBF', hint: 'Quando quiser' },
+  { id: 'p-trip',      emoji: '🚗', name: 'Primeira Viagem',              color: '#C4A87D', hint: 'Quando quiser' },
+];
+
+// DB helpers for milestones
+DB.milestones   = ()  => DB.get('milestones') || [];
+DB.addMilestone = m  => {
+  const a = DB.milestones(); a.push(m); DB.set('milestones', a);
+  API.post('/milestones.php', m).catch(e => console.warn('addMilestone', e));
+};
+DB.delMilestone = id => {
+  DB.set('milestones', DB.milestones().filter(m => m.id !== id));
+  API.del(`/milestones.php?id=${encodeURIComponent(id)}`).catch(e => console.warn('delMilestone', e));
+};
+DB.getMilestone = id => DB.milestones().find(m => m.id === id);
+
+function renderAlbum() {
+  const p = S.profile; if (!p) return;
+  renderAvatars();
+  const captured    = DB.milestones();
+  const capturedIds = new Set(captured.map(m => m.presetId).filter(Boolean));
+  const done        = captured.length;
+  const total       = MILESTONE_PRESETS.length;
+  const pct         = done === 0 ? 0 : Math.min(100, Math.round((done / total) * 100));
+
+  const tabs = `
+    <div class="insights-period-tabs animate-in" style="animation-delay:.04s">
+      <div class="period-tab ${S.albumTab==='memories'?'active':''}"     onclick="S.albumTab='memories';renderAlbum()">As minhas memórias</div>
+      <div class="period-tab ${S.albumTab==='suggestions'?'active':''}"  onclick="S.albumTab='suggestions';renderAlbum()">Sugestões</div>
+    </div>`;
+
+  const hero = `
+    <div class="album-hero animate-in">
+      <div class="album-hero-title">📸 Álbum da ${p.name}</div>
+      <div class="album-hero-sub">${done} momento${done!==1?'s':''} guardado${done!==1?'s':''}</div>
+      <div class="album-progress-bar"><div class="album-progress-fill" style="width:${pct}%"></div></div>
+      <div class="album-progress-label">${done} de ${total} sugestões capturadas ✨</div>
+    </div>`;
+
+  let body = '';
+
+  if (S.albumTab === 'memories') {
+    // Sort all captured entries chronologically
+    const sorted = [...captured].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (sorted.length === 0) {
+      body = `
+        <button class="btn-primary mb-20 animate-in" style="animation-delay:.08s" onclick="openSheet('milestone-custom')">+ Registar primeiro momento</button>
+        <div class="empty-state animate-in" style="animation-delay:.12s">
+          <div class="empty-state-icon">📷</div>
+          <div class="empty-state-text">O álbum está à espera</div>
+          <div class="empty-state-sub">Adicione o primeiro momento especial da ${p.name} ou inspire-se nas Sugestões.</div>
+        </div>`;
+    } else {
+      body = `
+        <button class="btn-primary mb-20 animate-in" style="animation-delay:.08s" onclick="openSheet('milestone-custom')">+ Novo momento</button>
+        <div class="album-grid animate-in" style="animation-delay:.1s">
+          ${sorted.map(m => buildCapturedCard(m)).join('')}
+        </div>`;
+    }
+  } else {
+    // Suggestions tab — presets split into captured / not yet
+    const capturedPresets   = MILESTONE_PRESETS.filter(pr => capturedIds.has(pr.id));
+    const uncapturedPresets = MILESTONE_PRESETS.filter(pr => !capturedIds.has(pr.id));
+
+    body = `<div class="animate-in" style="animation-delay:.08s">`;
+    if (capturedPresets.length > 0) {
+      body += `<div class="section-title" style="margin-bottom:12px">✅ Já capturados</div>
+        <div class="album-grid" style="margin-bottom:20px">
+          ${capturedPresets.map(pr => buildCapturedCard(captured.find(m => m.presetId === pr.id))).join('')}
+        </div>`;
+    }
+    body += `<div class="section-title" style="margin-bottom:12px">💡 Por capturar</div>
+      <div class="album-grid">
+        ${uncapturedPresets.map(pr => buildSuggestionCard(pr)).join('')}
+      </div></div>`;
+  }
+
+  document.getElementById('album-content').innerHTML = hero + tabs + body;
+}
+
+function buildCapturedCard(m) {
+  if (!m) return '';
+  const preset  = MILESTONE_PRESETS.find(p => p.id === m.presetId);
+  const emoji   = preset ? preset.emoji : (m.emoji || '⭐');
+  const color   = preset ? preset.color : '#E8968A';
+  const name    = preset ? preset.name  : m.name;
+  const dateStr = new Date(m.date).toLocaleDateString('pt-PT', { day:'numeric', month:'short', year:'numeric' });
+  const mediaHtml = m.photo
+    ? `<img src="${m.photo}" alt="${name}">`
+    : `<span class="album-card-emoji">${emoji}</span>`;
+  return `<div class="album-card captured" onclick="openMilestone('${m.id}')">
+    <div class="album-card-media" style="${m.photo ? '' : `background:${color}22`}">
+      ${mediaHtml}
+      <span class="album-card-badge">✓</span>
+    </div>
+    <div class="album-card-body">
+      <div class="album-card-name">${name}</div>
+      <div class="album-card-meta">${dateStr}</div>
+    </div>
+  </div>`;
+}
+
+function buildSuggestionCard(preset) {
+  return `<div class="album-card uncaptured" onclick="startMilestone('${preset.id}')">
+    <div class="album-card-media" style="background:${preset.color}18">
+      <span class="album-card-emoji">${preset.emoji}</span>
+    </div>
+    <div class="album-card-body">
+      <div class="album-card-name">${preset.name}</div>
+      <div class="album-card-meta">${preset.hint}</div>
+    </div>
+  </div>`;
+}
+
+function startMilestone(presetId) {
+  S._milestoneTarget = { presetId };
+  openSheet('milestone-add');
+}
+
+function openMilestone(id) {
+  const m = DB.getMilestone(id);
+  if (!m) return;
+  S._milestoneTarget = m;
+  openSheet('milestone-view');
+}
+
+function buildMilestoneAddSheet(target) {
+  const preset = target?.presetId ? MILESTONE_PRESETS.find(p => p.id === target.presetId) : null;
+  const isCustom = !preset;
+  const today = new Date().toISOString().slice(0, 10);
+  return `<div class="sheet-title">${preset ? preset.name : 'Novo Momento Especial'}</div>
+  ${isCustom ? `<div class="form-group">
+    <label class="form-label">Nome do momento</label>
+    <input type="text" class="form-control" id="m-name" placeholder="Ex: Primeiro sorriso para o pai...">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Emoji</label>
+    <input type="text" class="form-control" id="m-emoji" placeholder="⭐" maxlength="2" style="font-size:24px;text-align:center">
+  </div>` : `<div style="text-align:center;font-size:52px;margin-bottom:16px">${preset.emoji}</div>`}
+  <div class="form-group">
+    <label class="form-label">Foto (opcional)</label>
+    <div class="album-photo-upload" id="milestonePhotoUpload" onclick="document.getElementById('milestonePhotoInput').click()">
+      <span class="album-photo-upload-icon">📷</span>
+      <span class="album-photo-upload-text">Toque para adicionar uma foto</span>
+    </div>
+    <input type="file" id="milestonePhotoInput" accept="image/*" style="display:none" onchange="handleMilestonePhoto(event)">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Data</label>
+    <input type="date" class="form-control" id="m-date" value="${today}">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Nota especial</label>
+    <textarea class="form-control" id="m-note" placeholder="Como foi? O que sentiu? Onde estava?"></textarea>
+  </div>
+  <button class="btn-primary" onclick="saveMilestone()">Guardar memória 💕</button>`;
+}
+
+function buildMilestoneViewSheet(m) {
+  if (!m) return '';
+  const preset = MILESTONE_PRESETS.find(p => p.id === m.presetId);
+  const emoji  = preset ? preset.emoji : (m.emoji || '⭐');
+  const color  = preset ? preset.color : '#E8968A';
+  const name   = preset ? preset.name : m.name;
+  const dateObj = new Date(m.date);
+  const dateStr = dateObj.toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  // Age at time of milestone
+  const ageAtMs  = dateObj - new Date(S.profile.birth);
+  const ageWeeks = Math.floor(ageAtMs / (7*86400000));
+  const ageMonths= Math.floor(ageAtMs / (30.44*86400000));
+  const ageStr   = ageMonths >= 1
+    ? `${ageMonths} mes${ageMonths!==1?'es':''}`
+    : `${ageWeeks} semana${ageWeeks!==1?'s':''}`;
+
+  const mediaHtml = m.photo
+    ? `<img src="${m.photo}" alt="${name}">`
+    : `<div class="album-detail-emoji" style="background:${color}18;width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm)">${emoji}</div>`;
+
+  return `<div class="album-detail-media">${mediaHtml}</div>
+  <div class="album-detail-title">${name}</div>
+  <div class="album-detail-date">${dateStr}</div>
+  <div class="album-detail-age">Com ${ageStr} de idade 🌱</div>
+  ${m.note ? `<div class="album-detail-note">"${m.note}"</div>` : ''}
+  <button class="btn-danger" onclick="deleteMilestone('${m.id}')">Apagar este momento</button>`;
+}
+
+function handleMilestonePhoto(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const el = document.getElementById('milestonePhotoUpload');
+    el.innerHTML = `<img src="${ev.target.result}" alt="foto">`;
+    el.dataset.photo = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveMilestone() {
+  const target = S._milestoneTarget;
+  const preset = target?.presetId ? MILESTONE_PRESETS.find(p => p.id === target.presetId) : null;
+  const isCustom = !preset;
+  const name  = isCustom ? (document.getElementById('m-name')?.value.trim() || '') : preset.name;
+  const emoji = isCustom ? (document.getElementById('m-emoji')?.value.trim() || '⭐') : preset.emoji;
+  const dateVal = document.getElementById('m-date').value;
+  const note  = document.getElementById('m-note').value.trim();
+  const photo = document.getElementById('milestonePhotoUpload')?.dataset.photo || '';
+  if (isCustom && !name) { alert('Dê um nome a este momento'); return; }
+  if (!dateVal) { alert('Selecione a data'); return; }
+  const m = {
+    id:       uid(),
+    presetId: preset?.id || null,
+    isCustom,
+    name,
+    emoji,
+    date:     dateVal,
+    photo,
+    note,
+    savedAt:  Date.now(),
+  };
+  DB.addMilestone(m);
+  closeSheet();
+  showToast('Memória guardada! 💕');
+  renderAlbum();
+}
+
+function deleteMilestone(id) {
+  if (!confirm('Apagar este momento para sempre?')) return;
+  DB.delMilestone(id);
+  closeSheet();
+  showToast('Momento apagado');
+  renderAlbum();
+}
+
+// ===== AUTH =====
+function showLoginScreen() {
+  document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('bottom-nav').style.display   = 'none';
+}
+function hideLoginScreen() {
+  document.getElementById('login-screen').style.display = 'none';
+}
+function toggleLoginMode(showRegister) {
+  document.getElementById('login-form').style.display    = showRegister ? 'none'  : 'block';
+  document.getElementById('register-form').style.display = showRegister ? 'block' : 'none';
+}
+
+function normalizePhone(raw) {
+  const digits = raw.replace(/\D/g, '');
+  return digits.startsWith('258') ? digits : '258' + digits;
+}
+
+async function _authRequest(action, phone, pass) {
+  const r = await fetch(`${window.CONFIG?.apiUrl || '/api'}/auth.php?action=${action}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, password: pass }),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'Erro de autenticação');
+  localStorage.setItem('bebe_token', data.token);
+  localStorage.setItem('bebe_role',  data.role);
+  localStorage.setItem('bebe_phone', data.phone);
+  return data;
+}
+
+async function submitLogin() {
+  const phone = normalizePhone(document.getElementById('login-phone').value);
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  const btn   = document.getElementById('login-btn');
+  errEl.textContent = '';
+  if (phone.length < 10 || !pass) { errEl.textContent = 'Preencha o número e a senha.'; return; }
+  btn.textContent = 'A entrar…'; btn.disabled = true;
+  try {
+    await _authRequest('login', phone, pass);
+    await bootApp();
+  } catch(e) {
+    errEl.textContent = e.message;
+    btn.textContent = 'Entrar'; btn.disabled = false;
+  }
+}
+
+async function submitRegister() {
+  const phone = normalizePhone(document.getElementById('reg-phone').value);
+  const pass  = document.getElementById('reg-pass').value;
+  const errEl = document.getElementById('reg-err');
+  const btn   = document.getElementById('reg-btn');
+  errEl.textContent = '';
+  if (phone.length < 10 || !pass) { errEl.textContent = 'Preencha o número e a senha.'; return; }
+  btn.textContent = 'A criar conta…'; btn.disabled = true;
+  try {
+    await _authRequest('register', phone, pass);
+    localStorage.setItem('bebe_new_account', '1'); // flag to send welcome after onboarding
+    await bootApp();
+  } catch(e) {
+    errEl.textContent = e.message;
+    btn.textContent = 'Criar conta'; btn.disabled = false;
+  }
+}
+
+function logout() {
+  API.post('/auth.php?action=logout').catch(() => {});
+  localStorage.removeItem('bebe_token');
+  localStorage.removeItem('bebe_role');
+  showLoginScreen();
+}
+
+// ===== SYNC =====
+async function syncFromAPI() {
+  try {
+    const apiBase = window.CONFIG?.apiUrl || '/api';
+    const [profile, logs, meds, medLogs, milestones, appSettings] = await Promise.all([
+      API.get('/profile.php'),
+      API.get('/logs.php'),
+      API.get('/meds.php'),
+      API.get('/med_logs.php'),
+      API.get('/milestones.php'),
+      fetch(apiBase + '/app_settings.php').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    if (profile)     DB.set('profile',    profile);
+    if (logs)        DB.set('logs',       logs);
+    if (meds)        DB.set('meds',       meds);
+    if (medLogs)     DB.set('medlogs',    medLogs);
+    if (milestones)  DB.set('milestones', milestones);
+    if (appSettings) { DB.set('appSettings', appSettings); S.settings = appSettings; }
+    else             { S.settings = DB.get('appSettings') || {}; }
+    return true;
+  } catch(e) {
+    console.warn('Sync failed, using local cache:', e);
+    S.settings = DB.get('appSettings') || {};
+    return false;
+  }
+}
+
+// ===== BOOT =====
+async function bootApp() {
+  hideLoginScreen();
+  await syncFromAPI();
+
+  S.profile = DB.profile();
+  if (!S.profile) {
+    showScreen('onboarding');
+    document.getElementById('bottom-nav').style.display = 'none';
+  } else {
+    if (S.profile.themeColor) setThemeColor(S.profile.themeColor);
+    S.historyDate = todayStr();
+    S.sleepStart  = DB.get('sleepStart') || null;
+    document.getElementById('bottom-nav').style.display = '';
+    showScreen('home');
+    updateShareBtn();
+  }
+}
+
+// ===== INIT =====
+async function init() {
+  const token = localStorage.getItem('bebe_token');
+  if (!token) { showLoginScreen(); return; }
+
+  await bootApp();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
