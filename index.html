@@ -2686,8 +2686,6 @@ function renderAlbum() {
   const captured    = DB.milestones();
   const capturedIds = new Set(captured.map(m => m.presetId).filter(Boolean));
   const done        = captured.length;
-  const total       = MILESTONE_PRESETS.length;
-  const pct         = done === 0 ? 0 : Math.min(100, Math.round((done / total) * 100));
 
   const tabs = `
     <div class="insights-period-tabs animate-in" style="animation-delay:.04s">
@@ -2699,8 +2697,6 @@ function renderAlbum() {
     <div class="album-hero animate-in">
       <div class="album-hero-title">📸 Álbum da ${p.name}</div>
       <div class="album-hero-sub">${done} momento${done!==1?'s':''} guardado${done!==1?'s':''}</div>
-      <div class="album-progress-bar"><div class="album-progress-fill" style="width:${pct}%"></div></div>
-      <div class="album-progress-label">${done} de ${total} sugestões capturadas ✨</div>
     </div>`;
 
   let body = '';
@@ -2792,9 +2788,29 @@ function openMilestone(id) {
 }
 
 function buildMilestoneAddSheet(target) {
-  const preset = target?.presetId ? MILESTONE_PRESETS.find(p => p.id === target.presetId) : null;
+  const preset   = target?.presetId ? MILESTONE_PRESETS.find(p => p.id === target.presetId) : null;
   const isCustom = !preset;
-  const today = new Date().toISOString().slice(0, 10);
+  const today    = new Date().toISOString().slice(0, 10);
+
+  const waEnabled = S.settings?.wa_config?.enabled && S.settings?.wa_config?.url;
+  const waDefaultOn  = waEnabled && (localStorage.getItem('bebe_wa_share_default') !== 'off');
+  const defaultPhone = DB.waConfig().phones?.[0] || localStorage.getItem('bebe_phone') || '';
+
+  const waSection = waEnabled ? `
+  <div class="form-group" style="border:2px solid #25D366;border-radius:var(--radius-sm);padding:14px;background:#f0fdf4">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#15803d">📤 Partilhar no WhatsApp</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Envia com a foto e a nota quando guardar</div>
+      </div>
+      <label class="toggle-sw"><input type="checkbox" id="m-wa-toggle" onchange="toggleWaPhone(this)" ${waDefaultOn ? 'checked' : ''}><span class="toggle-track"></span></label>
+    </div>
+    <div id="m-wa-phone-row" style="margin-top:12px${waDefaultOn ? '' : ';display:none'}">
+      <label class="form-label">Número de destino</label>
+      <input type="tel" class="form-control" id="m-wa-phone" placeholder="258841234567" value="${defaultPhone}" style="font-family:monospace;letter-spacing:.5px">
+    </div>
+  </div>` : '';
+
   return `<div class="sheet-title">${preset ? preset.name : 'Novo Momento Especial'}</div>
   ${isCustom ? `<div class="form-group">
     <label class="form-label">Nome do momento</label>
@@ -2820,6 +2836,7 @@ function buildMilestoneAddSheet(target) {
     <label class="form-label">Nota especial</label>
     <textarea class="form-control" id="m-note" placeholder="Como foi? O que sentiu? Onde estava?"></textarea>
   </div>
+  ${waSection}
   <button class="btn-primary" onclick="saveMilestone()">Guardar memória 💕</button>`;
 }
 
@@ -2882,9 +2899,36 @@ function saveMilestone() {
     savedAt:  Date.now(),
   };
   DB.addMilestone(m);
+
+  const waToggle = document.getElementById('m-wa-toggle');
+  if (waToggle?.checked) {
+    const phone = document.getElementById('m-wa-phone').value.trim();
+    localStorage.setItem('bebe_wa_share_default', 'on');
+    if (phone) shareMilestoneOnWA(phone, m);
+  } else if (waToggle) {
+    localStorage.setItem('bebe_wa_share_default', 'off');
+  }
+
   closeSheet();
   showToast('Memória guardada! 💕');
   renderAlbum();
+}
+
+function toggleWaPhone(cb) {
+  document.getElementById('m-wa-phone-row').style.display = cb.checked ? 'block' : 'none';
+}
+
+async function shareMilestoneOnWA(phone, m) {
+  const preset  = m.presetId ? MILESTONE_PRESETS.find(p => p.id === m.presetId) : null;
+  const emoji   = preset?.emoji || m.emoji || '⭐';
+  const dateStr = new Date(m.date).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
+  const text    = `${emoji} *${m.name}*\n📅 ${dateStr}${m.note ? `\n\n"${m.note}"` : ''}\n\n_bebélog_ 💕`;
+
+  await API.post('/send_milestone.php', {
+    phone,
+    text,
+    photo: m.photo || null,
+  }).catch(e => console.warn('milestone WA share', e));
 }
 
 function deleteMilestone(id) {
