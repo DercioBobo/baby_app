@@ -972,16 +972,34 @@ function buildSheetContent(type) {
   }
 }
 
+// ===== IMAGE COMPRESSION =====
+function compressImage(file, maxPx = 1200, quality = 0.82) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const ratio = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const w = Math.round(img.width * ratio);
+        const h = Math.round(img.height * ratio);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // ===== ONBOARDING =====
-function handlePhotoUpload(e) {
+async function handlePhotoUpload(e) {
   const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const pu = document.getElementById('photoUpload');
-    pu.innerHTML = `<img src="${ev.target.result}" alt="bebé">`;
-    pu.dataset.photo = ev.target.result;
-  };
-  reader.readAsDataURL(file);
+  const data = await compressImage(file, 600, 0.80);
+  const pu = document.getElementById('photoUpload');
+  pu.innerHTML = `<img src="${data}" alt="bebé">`;
+  pu.dataset.photo = data;
 }
 function completeOnboarding() {
   const name = document.getElementById('ob-baby-name').value.trim();
@@ -1076,7 +1094,7 @@ function renderDashboard() {
           <button class="hero-btn" onclick="showScreen('sleep')">Ver sono ›</button>
         </div>` : `
         <div class="hero-actions">
-          <button class="hero-btn" onclick="dashStartSleep()">🌙 Adormecer agora</button>
+          <button class="hero-btn" onclick="dashStartSleep()">🌙 Adormeceu agora</button>
         </div>`}
     </div>
     <div class="quick-stats animate-in" style="animation-delay:.05s">
@@ -2092,14 +2110,11 @@ function renderSettings() {
     </div>`;
   document.getElementById('settings-content').innerHTML = html;
 }
-function handleSettingsPhoto(e) {
+async function handleSettingsPhoto(e) {
   const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const p = DB.profile(); p.photo = ev.target.result; DB.setProfile(p); S.profile = p;
-    renderSettings(); renderAvatars();
-  };
-  reader.readAsDataURL(file);
+  const data = await compressImage(file, 600, 0.80);
+  const p = DB.profile(); p.photo = data; DB.setProfile(p); S.profile = p;
+  renderSettings(); renderAvatars();
 }
 function saveSettings() {
   const p = DB.profile();
@@ -2132,7 +2147,10 @@ function clearData() {
 
 // User config: phones + per-type toggles (set by user in settings)
 DB.waConfig    = () => DB.get('waConfig') || { phones:[], enabled:true, notif:{ meds:true, summary:true, sleep:false, welcome:true } };
-DB.setWaConfig = cfg => DB.set('waConfig', cfg);
+DB.setWaConfig = cfg => {
+  DB.set('waConfig', cfg);
+  API.post('/user_settings.php', { waConfig: cfg }).catch(e => console.warn('waConfig sync', e));
+};
 
 // Template variable substitution
 function fillTemplate(tpl, vars) {
@@ -2833,15 +2851,12 @@ function buildMilestoneViewSheet(m) {
   <button class="btn-danger" onclick="deleteMilestone('${m.id}')">Apagar este momento</button>`;
 }
 
-function handleMilestonePhoto(e) {
+async function handleMilestonePhoto(e) {
   const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const el = document.getElementById('milestonePhotoUpload');
-    el.innerHTML = `<img src="${ev.target.result}" alt="foto">`;
-    el.dataset.photo = ev.target.result;
-  };
-  reader.readAsDataURL(file);
+  const data = await compressImage(file, 1200, 0.82);
+  const el = document.getElementById('milestonePhotoUpload');
+  el.innerHTML = `<img src="${data}" alt="foto">`;
+  el.dataset.photo = data;
 }
 
 function saveMilestone() {
@@ -2961,19 +2976,21 @@ function logout() {
 async function syncFromAPI() {
   try {
     const apiBase = window.CONFIG?.apiUrl || '/api';
-    const [profile, logs, meds, medLogs, milestones, appSettings] = await Promise.all([
+    const [profile, logs, meds, medLogs, milestones, appSettings, userSettings] = await Promise.all([
       API.get('/profile.php'),
       API.get('/logs.php'),
       API.get('/meds.php'),
       API.get('/med_logs.php'),
       API.get('/milestones.php'),
       fetch(apiBase + '/app_settings.php').then(r => r.ok ? r.json() : null).catch(() => null),
+      API.get('/user_settings.php'),
     ]);
-    if (profile)     DB.set('profile',    profile);
-    if (logs)        DB.set('logs',       logs);
-    if (meds)        DB.set('meds',       meds);
-    if (medLogs)     DB.set('medlogs',    medLogs);
-    if (milestones)  DB.set('milestones', milestones);
+    if (profile)                  DB.set('profile',    profile);
+    if (logs)                     DB.set('logs',       logs);
+    if (meds)                     DB.set('meds',       meds);
+    if (medLogs)                  DB.set('medlogs',    medLogs);
+    if (milestones)               DB.set('milestones', milestones);
+    if (userSettings?.waConfig)   DB.set('waConfig',   userSettings.waConfig);
     if (appSettings) { DB.set('appSettings', appSettings); S.settings = appSettings; }
     else             { S.settings = DB.get('appSettings') || {}; }
     return true;

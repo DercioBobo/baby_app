@@ -6,8 +6,12 @@ CREATE TABLE IF NOT EXISTS users (
   phone         VARCHAR(20) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   role          ENUM('user','admin') NOT NULL DEFAULT 'user',
+  settings      TEXT DEFAULT NULL,
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- If upgrading an existing install, run this once:
+-- ALTER TABLE users ADD COLUMN settings TEXT DEFAULT NULL;
 
 CREATE TABLE IF NOT EXISTS tokens (
   id         INT AUTO_INCREMENT PRIMARY KEY,
